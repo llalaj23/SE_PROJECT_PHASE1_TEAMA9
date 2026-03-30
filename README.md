@@ -38,9 +38,7 @@ Reporting system for items or users
 2. Jeta Okshtuni – Database Developer
 Design and manage the database structure
 Implement and optimize database queries
-Develop search functionality, including:
-- Searching by item name
-- Filtering by price and date posted
+Develop search functionality, including: Searching by item name//Filtering by price and date posted
 3. Briana Vathi – Frontend Development
 Design and implement the user interface
 Display data retrieved from user queries
