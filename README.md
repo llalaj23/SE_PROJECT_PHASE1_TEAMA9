@@ -24,23 +24,23 @@ We will create an online platform, locked to Albanian citizens, where users are 
 The application makes it possible for buyers and sellers to have a safe marketplace to exchange second hand items. Users create an account and verify their identity. Afterwards they're free to buy and sell. Sellers can list items by providing photos or videos, setting a price adding description and tags. Buyers can search for items and filter out what they're looking for. Users can message each other to ask further questions for the product and also have an option to negotiate prices. They will have different delivery options from which they can choose from.
 # Roles and Tasks
 ## Team Leader: Ledio Lalaj
-Oversee overall project structure and system design
-Set up the project environment and architecture
-Implement user authentication (registration, login, security)
-Integrate frontend, backend, and database components
+- Oversee overall project structure and system design
+- Set up the project environment and architecture
+- Implement user authentication (registration, login, security)
+- Integrate frontend, backend, and database components
 ## Team Members:
 1. Andrea Shtjefni - Backend Development
-Develop core application features through APIs, including:
-Creating, viewing, editing, and updating items
-Messaging functionality between users
-Review and rating system
+- Develop core application features through APIs, including:
+- Creating, viewing, editing, and updating items
+- Messaging functionality between users
+- Review and rating system
 Reporting system for items or users
 2. Jeta Okshtuni – Database Developer
-Design and manage the database structure
-Implement and optimize database queries
-Develop search functionality, including: Searching by item name//Filtering by price and date posted
+- Design and manage the database structure
+- Implement and optimize database queries
+- Develop search functionality, including: Searching by item name//Filtering by price and date posted
 3. Briana Vathi – Frontend Development
-Design and implement the user interface
-Display data retrieved from user queries
-Handle user input through forms
-Manage client-side validation and error handling
+- Design and implement the user interface
+- Display data retrieved from user queries
+- Handle user input through forms
+- Manage client-side validation and error handling
