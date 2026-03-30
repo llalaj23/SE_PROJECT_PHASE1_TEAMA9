@@ -35,7 +35,7 @@ The application makes it possible for buyers and sellers to have a safe marketpl
 - Messaging functionality between users
 - Review and rating system
 Reporting system for items or users
-2. Jeta Okshtuni – Database Developer
+2. Jeta Okshtuni – Database Development
 - Design and manage the database structure
 - Implement and optimize database queries
 - Develop search functionality, including: Searching by item name//Filtering by price and date posted
