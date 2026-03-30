@@ -1,7 +1,7 @@
 # SE_PROJECT_PHASE1_TEAMA9
 # Team Information
 ## Team Name: Again & Again
-## Team Leader:
+## Team Leader: 
 - Name: Ledio Lalaj
 - GitHub: llalaj23
 ## Team Members:
