@@ -41,7 +41,7 @@ Implement and optimize database queries
 Develop search functionality, including:
 - Searching by item name
 - Filtering by price and date posted
-3. Brianai Vathi – Frontend Development
+3. Briana Vathi – Frontend Development
 Design and implement the user interface
 Display data retrieved from user queries
 Handle user input through forms
