@@ -1,7 +1,7 @@
-# 1. Chosen Development Model
+# Chosen Development Model
 For developing our project, the method we chose is the agile development method. Given that this is the first project we are working on as a team, we think that our project will develop and evolve throughout creation. As such, we think that a model appropriate for our project is one that allows us to make changes along the way as we come up with new and improved ideas of features we are working on implementing.
 
-# 2. User Requirements
+# User Requirements
 a. Stakeholders: 
 - End-users: Citizens of Albania interested in discarding items they no longer use, or citizens that are interested in buying second-hand goods with decent quality for reasonable prices.
 - Developers: The project team members who will work on making the marketplace system a reality.
@@ -19,7 +19,7 @@ b. User Stories
 - As a user/buyer I want to be able to view the location of an item in order to see if they are close enough for me to want to purchase.
 - As a user I want to be able to view past interactions so I can keep track of my activity.
 
-# 3. Functional Requirements
+# Functional Requirements
 a. User authentication: The system should allow users to register and create an account.
 Acceptance criteria:
 A person uses ID number to create an account. 
@@ -122,7 +122,7 @@ Acceptance criteria:
 Users have access to a notification section.
 Here they are able to view when an item is sold, when a message is sent etc.
 
-# 4. Non-Functional Requirements
+# Non-Functional Requirements
 a. Speed: The system should load quickly.
 Acceptance criteria:
 Page loads in less than 5 seconds.
@@ -199,7 +199,7 @@ Acceptance criteria:
 The system continues to operate even if there is a small error that is non critical.
 Users will be notified if a certain feature doesn't work at the moment.
 
-# 5. Application Specifications
+# Application Specifications
 a. Architecture
 The system will consist of three parts: the frontend, backend, and the database. Through the frontend interfaces users will send requests to the backend, which in turn, will pull the data from the database to complete the request.
 b. Database Model
