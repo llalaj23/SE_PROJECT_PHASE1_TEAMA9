@@ -1,1 +1,212 @@
+# 1. Chosen Development Model
+For developing our project, the method we chose is the agile development method. Given that this is the first project we are working on as a team, we think that our project will develop and evolve throughout creation. As such, we think that a model appropriate for our project is one that allows us to make changes along the way as we come up with new and improved ideas of features we are working on implementing.
 
+# 2. User Requirements
+a. Stakeholders: 
+- End-users: Citizens of Albania interested in discarding items they no longer use, or citizens that are interested in buying second-hand goods with decent quality for reasonable prices.
+- Developers: The project team members who will work on making the marketplace system a reality.
+b. User Stories
+- As a user/buyer, I want to be able to browse through commodities other people are putting up for sale. I want to have filtering options such as keywords, price-sorting, or proximity sorting to see what items are realistic for me to seek out.
+- As a user/buyer, I want to be able to message sellers to ask for more information or pictures of the commodity they are offering. 
+- As a user/seller, I want to add pictures and descriptions of the items I am putting up for sale.
+- As a user/seller, I want to add/update/delete items for sale. I want to add multiple pictures and descriptions. If an item is sold, I want to be able to mark it as such.
+- As both a buyer and a seller, I want a two-way review system that records transaction experiences, so users can assess whether the other party is trustworthy or potentially fraudulent. 
+- For similar purposes, I want a report function to escalate improper behaviour to customer care agents for reviewing.
+- As a user/buyer I want to be able to favorite items that I might be interested in. I want to be able to view them again in a wishlist so they're easily accessible. 
+- As a user/ buyer I want to be able to negotiate with sellers in order to make items more affordable.
+- As a user I want to receive notifications in order to respond quickly to messages from other users.
+- As a user I want to be able to view other users' profiles in order to see how trustworthy they are before interacting with them.  
+- As a user/buyer I want to be able to view the location of an item in order to see if they are close enough for me to want to purchase.
+- As a user I want to be able to view past interactions so I can keep track of my activity.
+
+# 3. Functional Requirements
+a. User authentication: The system should allow users to register and create an account.
+Acceptance criteria:
+A person uses ID number to create an account. 
+They are prompted to create an account using email and by setting a password.
+Credentials are verified.
+The registered user is redirected to the home page.
+b. User log in: System should allow users to log in and out of their accounts.
+Acceptance criteria:
+The user enters their email and password to log in.
+Credentials are verified by the system.
+If invalid credentials are submitted, “Invalid credentials” message is displayed on screen prompting the user to try again.
+c. Home page browsing: The system should provide users with a way to seek out items within feasible real life (monetary or location) constraints.
+Acceptance criteria:
+After successful log in, users are redirected to the software’s home page displaying items for sale.
+Search functionality that users type words into to find items with titles fully or partially matching with what the user wrote.
+d. Filtering System: System should allow users to filter items based on specific criteria.
+Acceptance criteria:
+Filter buttons that users can toggle to check items within a specific price range or within a specified radius. 
+Results will be updated based on the filters set.
+Search options should be stackable allowing for filtering within filtering.
+e. Item creation/edit/deletion: Registered users can upload items for sale by writing a title, uploading picture(s), writing a short description, and putting a base asking price. After uploading the item, they can change information or delete it fully.
+Acceptance criteria:
+User goes to create an item button.
+He fills in the form with the appropriate information and confirms creation.
+If needed, user can make changes to item created. *Edited information is logged in cases where change is committed for fraudulent purposes*
+If user changes his mind, he can delete the item poster entirely. 
+f. Item viewing: System should allow users to view detailed information about the listed items.
+Acceptance criteria:
+User clicks on the item they want to view.
+The item page displays all information about the item such as price, condition, description, seller information.
+g. Item status: System should allow sellers to update the status of the items.
+Acceptance criteria:
+Sellers can mark items as sold.
+The sold items are clearly marked and not shown on search pages only in the sellers profile or wishlist.
+h. Multiple images uploads: System allows sellers to upload multiple images for the items they're listing.
+Acceptance criteria:
+Users can upload more than one photo.
+All images are displayed in the detailed item viewing page.
+i. Rating system: After a transaction has been completed, seller and buyer can give a rating (out of 5) to each other based on how smooth the interaction and transaction went.
+Acceptance criteria:
+Both parties confirm the transaction happened.
+Review feature is unlocked.
+Users rate each other and have the option to add justification or information on their review.
+j. Report system: Users can report fraudulent or improper behaviour.
+Acceptance criteria:
+Users visit other users’ profiles.
+From the profile, they can submit a report on the user.
+Option to add screenshots and elaborate text description. 
+k. Messaging system: Users and sellers can communicate with each other in order to ask for extra information.
+Acceptance criteria:
+Users can open a chat from an item listing.
+Messages can be sent and received between users and sellers.
+Chat history is stored and accessible.
+l. Wishlist and favorites: System allows users to add items to wishlist for later viewing.
+Acceptance criteria:
+Users are able to mark items as favorites.
+Wishlist appears in the users profile.
+Users are able to remove items off of their wishlist.
+m. User Profile: Allows users to manage their information.
+Acceptance criteria:
+Users are able to view, edit, add and delete their information.
+Can view past purchases, wishlist etc.
+n. Location Services: System provides location based features for more relevant searches.
+Acceptance criteria:
+Users can allow access to location.
+Items display approximate distance from user.
+o. Category system: Items are put into categories for easier search.
+Acceptance criteria:
+Sellers can select a category when listing an item.
+Users can select categories when searching for items.
+Items are displayed under their categories.
+p. Condition specification: Sellers should be able to specify the condition of the items they are listing.
+Conditions of items are displayed on the listings.
+Users can select the condition based on what they are looking for.
+Sellers can place the condition.
+q. History Tracking system: System should keep track of negotiations of prices.
+Acceptance criteria:
+All offers and counteroffers are stored.
+Users can view the final price.
+r. Blocking System: Users can block other users.
+Acceptance criteria:
+Users are able to block other users.
+They cant see blocked users or their listings.
+Users are able to unblock users if they decide to.
+s. Password reset: System should allow users to reset their passwords in case of them forgetting.
+Acceptance criteria:
+Users are able to request a password reset.
+The reset link is sent on the users email.
+t. Admin page: A page for the admins to have access to tools for managing the system.
+Acceptance criteria:
+Reports submitted by users can be viewed. 
+Banning or suspension of users.
+Removing listings if they don't follow regulations.
+u. Listing date display: System should show when items are posted.
+Acceptance criteria: 
+Every item shows the date that it was posted.
+Users can see how recent an item listing is.
+v. Notifications: System should allow users to view notifications.
+Acceptance criteria:
+Users have access to a notification section.
+Here they are able to view when an item is sold, when a message is sent etc.
+
+# 4. Non-Functional Requirements
+a. Speed: The system should load quickly.
+Acceptance criteria:
+Page loads in less than 5 seconds.
+b. Ease of use: The system should be understandable even for non tech-savvy users.
+Acceptance criteria:
+Everybody’s 70 year old grandpa should be able to follow how the app works.
+c. Security: Users credentials and ID information should be safely stored.
+Acceptance criteria:
+Use hashing for passwords and encryption for IDs to prevent data theft from users.
+d. Environmental impact: Encourage reusing and repurposing of old goods.
+Acceptance criteria:
+Make a software system that finds widespread use.
+e. Availability: System should be up for use at all times.
+Acceptance criteria:
+Have the system running at all times, minimize downtimes as much as possible.
+f. Scalability: System should be able to handle the growth of users and listings without problems in performance.
+Acceptance criteria:
+System performance should remain stable even if there is  higher activity than normal.
+g. Performance: The system should respond quickly to users actions.
+Acceptance criteria: 
+When a user posts items or sends messages they are processed quickly without delay.
+h. Reliability: The system should be reliable and run smoothly. 
+Acceptance criteria:
+The system runs smoothly without crashes.
+Data is not lost.
+i. Maintainability: System is easy to maintain and update by developers. 
+Acceptance criteria:
+In case of needing to change certain aspects of the system there shouldn't be a problem. 
+The code should be structured in a clear way.
+j. Usability: The system should be easy to use and intuitive.
+Acceptance criteria:
+The system should be easy to navigate and intuitive for users to find everything that they're searching for.
+Everything should be in the right places.
+k. Compatibility: System should work between different devices.
+Acceptance criteria: 
+The system is functional across different devices.
+l. Data Privacy: The system should be secure and protect user data.
+Acceptance criteria:
+Data is not shared without user consent.
+Data should be secure in case of attempted attacks.
+Users can request deletion of data.
+m. Error Handling: System should handle errors in a smooth way.
+Acceptance criteria: 
+Clear error messages should be displayed in case there is a problem.
+n. Backup: System backs up data in order to prevent data loss.
+Acceptance criteria: 
+Regular back ups are performed.
+o. Responsiveness: System responds to different screen sizes.
+Acceptance criteria:
+The interface adjusts properly on different screen sizes.
+p. Consistency: System behaves consistently throughout all features.
+Acceptance criteria:
+Interface design is consistent across all pages. 
+Similar actions give similar results.
+q. Integrity: System should contain data that is consistent and accurate.
+Acceptance criteria:
+No unnecessary data duplication.
+r. Latency: System minimizes delays in communication.
+Acceptance criteria:
+User actions are reflected in real time in the system.
+Messages are delivered with minimal delay.
+s. Extensibility: System allows for future extensions of features.
+Acceptance criteria: 
+New features are easily deployed without having to change the whole system.
+t. Accessibility: The system should be usable by users with different abilities.
+Acceptance criteria:
+Text is visible, clear and readable.
+Interface icons are easy to understand and distinguish. 
+u. Session stability: The system should maintain stable user sessions.
+Acceptance criteria:
+Users remain logged in during normal use and sessions do not end unexpectedly without user prompting to do so.
+v. Fault tolerance: System should continue working despite small errors. 
+Acceptance criteria: 
+The system continues to operate even if there is a small error that is non critical.
+Users will be notified if a certain feature doesn't work at the moment.
+
+# 5. Application Specifications
+a. Architecture
+The system will consist of three parts: the frontend, backend, and the database. Through the frontend interfaces users will send requests to the backend, which in turn, will pull the data from the database to complete the request.
+b. Database Model
+An Entity Relationship Diagram will be used. The database will include entities such as users, items, categories, messages, reviews, wishlist, and report. Entities such as users, items and categories will have unique IDs to make sure they can be separately identified. Other entities will consist of information (the primary keys) from other entities. For example, messages will have sender's ID and receiver's ID, alongside message content. Wishlist will have user ID and item ID. All entities mentioned will also contain additional attributes to be as clear as possible.
+c. Technologies Used
+For the development of our software system backend we will use Python's Django framework. To handle the database system we will use PostgreSQL. As for our frontend development, we will use Django templates that use HTML, CSS and JavaScript.
+d. User Interface Design
+Users begin on a registration and login page. After logging in, the main page displays recently listed items. The interface will be minimalistic as to not confuse non tech-savvy users. There will be a button to access your own profile, alongside buttons to add an item for sale. There will also be buttons for searching as well as clickable, paginated tabs for items on the landing page.
+e. Security Measures
+For the safety of our users, passwords will be hashed and their IDs will be encrypted to make sure that no data leak or theft causes harm to the system users.
