@@ -1,0 +1,10 @@
+1. Software architecture
+  ** System architecture
+    1. Buying customer browses items (can look in general, or filter by prices, or by categories, or by proximity) and selects an item. 
+    2. Buying customer messages selling customer for more details.Message goes from sender’s device to the backend to the receiver’s device. 
+    3. Negotiating and sale (afterwards) happens.
+    4. Selling customer unlists item.
+    5. Request is sent to the backend and processed. 
+    6. Update item availability in the database.
+    7. Update frontend.
+  ** Component diagram
