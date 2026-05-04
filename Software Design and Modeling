@@ -17,3 +17,5 @@ Messages (Handle user to user interactions)
 Data Access (Get information or provide information to/from database)
 2. Detailed design
  ** Class diagram
+![image alt](https://github.com/llalaj23/SE_PROJECT_PHASE1_TEAMA9/blob/0cc8edd9ff645fe30a76974252920a294bc0a0dc/ClassDiagram.drawio.png)
+ ** Sequence diagrams
