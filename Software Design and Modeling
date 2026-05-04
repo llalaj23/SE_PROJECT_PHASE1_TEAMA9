@@ -7,7 +7,7 @@
     5. Request is sent to the backend and processed. 
     6. Update item availability in the database.
     7. Update frontend.
-  ** Component diagram
+  ** Component Diagram
 ![image alt](https://github.com/llalaj23/SE_PROJECT_PHASE1_TEAMA9/blob/cda40ef3d6a6db968b9bcef202b19ba267a02a70/ComponentDiagram.drawio.png)
      Components:
 User (store user information)
@@ -16,15 +16,16 @@ Rating/Report (Maintain “behaviour” and user status)
 Messages (Handle user to user interactions)
 Data Access (Get information or provide information to/from database)
 2. Detailed design
- ** Class diagram
+  ** Class Diagram
 ![image alt](https://github.com/llalaj23/SE_PROJECT_PHASE1_TEAMA9/blob/0cc8edd9ff645fe30a76974252920a294bc0a0dc/ClassDiagram.drawio.png)
- ** Sequence diagrams
+  ** Sequence diagrams
 ![image alt](https://github.com/llalaj23/SE_PROJECT_PHASE1_TEAMA9/blob/41f1eeba3ba1c754de03d370b7fc7f3dafa533a2/Sequence1.drawio.png)
 ![image alt](https://github.com/llalaj23/SE_PROJECT_PHASE1_TEAMA9/blob/41f1eeba3ba1c754de03d370b7fc7f3dafa533a2/Sequence2.drawio.png)
 ![image alt](https://github.com/llalaj23/SE_PROJECT_PHASE1_TEAMA9/blob/41f1eeba3ba1c754de03d370b7fc7f3dafa533a2/Sequence3.drawio.png)
 3. Modeling
- ** Use Case Diagram
+  ** Use Case Diagram
 ![image alt](https://github.com/llalaj23/SE_PROJECT_PHASE1_TEAMA9/blob/97e78857afa3ee9739b67c775956bc0871ee9133/UseCaseDiagram.jpeg)
- ** Activity Diagram
+  ** Activity Diagram
 ![image alt](https://github.com/llalaj23/SE_PROJECT_PHASE1_TEAMA9/blob/97e78857afa3ee9739b67c775956bc0871ee9133/ActivityDiagram1.jpeg)
 ![image alt](https://github.com/llalaj23/SE_PROJECT_PHASE1_TEAMA9/blob/97e78857afa3ee9739b67c775956bc0871ee9133/ActivityDiagram2.jpeg)
+  ** State Diagram
