@@ -1,0 +1,14 @@
+[
+  {"model": "marketplace.category", "pk": 1,  "fields": {"name": "Electronics",       "addedAt": "2025-01-01T00:00:00Z"}},
+  {"model": "marketplace.category", "pk": 2,  "fields": {"name": "Clothing & Shoes",  "addedAt": "2025-01-01T00:00:00Z"}},
+  {"model": "marketplace.category", "pk": 3,  "fields": {"name": "Furniture",         "addedAt": "2025-01-01T00:00:00Z"}},
+  {"model": "marketplace.category", "pk": 4,  "fields": {"name": "Books",             "addedAt": "2025-01-01T00:00:00Z"}},
+  {"model": "marketplace.category", "pk": 5,  "fields": {"name": "Sports & Outdoors", "addedAt": "2025-01-01T00:00:00Z"}},
+  {"model": "marketplace.category", "pk": 6,  "fields": {"name": "Toys & Games",      "addedAt": "2025-01-01T00:00:00Z"}},
+  {"model": "marketplace.category", "pk": 7,  "fields": {"name": "Vehicles",          "addedAt": "2025-01-01T00:00:00Z"}},
+  {"model": "marketplace.category", "pk": 8,  "fields": {"name": "Home & Garden",     "addedAt": "2025-01-01T00:00:00Z"}},
+  {"model": "marketplace.category", "pk": 9,  "fields": {"name": "Musical Instruments","addedAt": "2025-01-01T00:00:00Z"}},
+  {"model": "marketplace.category", "pk": 10, "fields": {"name": "Art & Collectibles", "addedAt": "2025-01-01T00:00:00Z"}},
+  {"model": "marketplace.category", "pk": 11, "fields": {"name": "Baby & Kids",       "addedAt": "2025-01-01T00:00:00Z"}},
+  {"model": "marketplace.category", "pk": 12, "fields": {"name": "Other",             "addedAt": "2025-01-01T00:00:00Z"}}
+]
