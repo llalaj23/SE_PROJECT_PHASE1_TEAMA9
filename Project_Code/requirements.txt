@@ -1,0 +1,13 @@
+django==5.1.4
+psycopg2-binary==2.9.10
+django-allauth==65.3.0
+django-environ==0.11.2
+Pillow==11.1.0
+django-filter==24.3
+django-crispy-forms==2.3
+crispy-bootstrap5==2024.10
+django-simple-history==3.7.0
+django-encrypted-model-fields==0.6.5
+django-ratelimit==4.1.0
+whitenoise==6.8.2
+gunicorn==23.0.0
