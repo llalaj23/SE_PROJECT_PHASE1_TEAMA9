@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}Home — Again & Again{% endblock %}
+
+{% block content %}
+
+<!-- Hero Section -->
+<div class="p-5 mb-4 bg-dark text-white rounded-3 text-center">
+  <h1 class="fw-bold display-5">Buy &amp; Sell Second-Hand in Albania</h1>
+  <p class="lead mt-2">Give your unused items a new home. Find great deals near you.</p>
+  {% if not user.is_authenticated %}
+    <a href="{% url 'account_signup' %}" class="btn btn-light btn-lg me-2">Get Started</a>
+    <a href="{% url 'account_login' %}" class="btn btn-outline-light btn-lg">Login</a>
+  {% endif %}
+</div>
+
+<!-- Placeholder message — listings will appear here in Sprint 2 -->
+<div class="text-center text-muted py-5">
+  <i class="bi bi-box-seam" style="font-size: 3rem;"></i>
+  <p class="mt-3 fs-5">Listings coming in Sprint 2.</p>
+</div>
+
+{% endblock %}
