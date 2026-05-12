@@ -210,3 +210,5 @@ Destroying test database for alias 'default' ('file:memorydb_default?mode=memory
 | Category validation | TC06: no category → form error, no item saved |
 | Multiple missing fields | TC07: title + price empty → form error, no item saved |
 | All fields empty | TC08: empty POST → form errors on all required fields, no item saved |
+
+SCREENSHOTS/IMAGES OF TESTING => https://github.com/llalaj23/SE_PROJECT_PHASE1_TEAMA9/tree/main/itemUploadingFunctionTesting
