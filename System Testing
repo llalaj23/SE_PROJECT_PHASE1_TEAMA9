@@ -1,0 +1,212 @@
+1.	Introduction to testing
+Testing is the process of experimenting with the features of a program with the goal of finding errors before delivering the product to end users. There are many reasons as to why testing is fundamental to the software design process. 
+For one, testing detects bugs and other forms of unintended behaviour, which can cause varying levels of damage to the system. Additionally, it confirms that the product to be delivered is compliant with what end users asked for. Lastly, it makes maintenance easier, while also lowering time and monetary costs. By fixing errors before they cause harm, the maintenance process  becomes easier and less demanding. 
+2.	Purpose of testing
+As mentioned in the previous section, testing the software model before delivering it to end users helps identify bugs and other system faults that can and should be resolved before causing major issues for customers after deployment.
+During testing, whether a single unit or the entire system is being evaluated, use cases are created to anticipate the different ways the system may respond to user actions. Once these use cases have been identified, the expected outcome for each is documented, outlining how the system is predicted to behave. Testers then recreate the behaviour described in each use case to determine whether the actual results conform to the expected ones. Any unexpected or unplanned behaviours that arise during testing are also documented and evaluated accordingly.
+3.	Focus on testing a single component: 
+ -- The Browsing Function
+The selected component for testing is the Browsing Function. Given that this project is built around a marketplace where users discover items they wish to purchase, browsing is arguably the most central feature of the entire system. If users cannot effectively navigate and find listings, the platform loses its core purpose entirely, as no transactions can begin without it.
+Testing the different aspects of this feature is equally critical because it verifies how the system behaves across a wide range of scenarios: whether the search returns accurate results for partial keyword matches, whether filters such as price range and category apply correctly and stack with one another, whether items marked as sold are properly excluded from results, and whether the page loads listings reliably. Ensuring all these cases are handled correctly is therefore essential to the overall quality of the software.
+
+ -- Item listing/uploading
+The second component selected for testing is item listing. As the main purpose of the marketplace is to showcase different items, it's important for us to make sure that the item uploading works well with all features and takes into consideration different cases. All items must be detailed, so include pictures, title, price so that they can be shown as close to the real life item as possible. 
+Testing sees how it would react when there is missing information such as no pictures no title or information that is not valid such as negative numbers for a price.
+
+4. Preparing Test Cases
+
+The table below lists all test cases written for this report. "Normal" means a straightforward happy path; "Edge" means a boundary condition; "Invalid" means deliberately bad input.
+
+| TestID | Scenario | Input | Expected Result | Test Type |
+|--------|----------|-------|-----------------|-----------|
+| TC01 | Valid listing — all fields provided | Title, description, price ≥ 0, category, condition all present | HTTP 302 redirect; item saved in database | Normal |
+| TC02 | Missing title | `itemName = ''`, all other fields valid | Form invalid; `itemName` in errors; HTTP 200 re-render | Invalid |
+| TC03 | Missing description | `description = ''`, all other fields valid | Form invalid; `description` in errors; HTTP 200 re-render | Invalid |
+| TC04 | Missing price | `itemPrice = ''`, all other fields valid | Form invalid; `itemPrice` in errors; HTTP 200 re-render | Invalid |
+| TC05 | Invalid price (negative) | `itemPrice = '-10'`, all other fields valid | Form invalid; `itemPrice` in errors; HTTP 200 re-render | Edge |
+| TC06 | Missing category | No `categoryID`, all other fields valid | Form invalid; `categoryID` in errors; HTTP 200 re-render | Invalid |
+| TC07 | Multiple fields missing | `itemName = ''`, `itemPrice = ''` | Form invalid; errors on both fields; HTTP 200 re-render | Invalid |
+| TC08 | All fields empty | `{}` (completely empty POST) | Form invalid; errors on all required fields; HTTP 200 re-render | Invalid |
+
+---
+
+## 5. Writing Test Code
+
+The test file is located at `marketplace/tests.py`. All eight test cases are implemented in a single class, `ItemListingTests`, which sends real HTTP requests through Django's test `Client` to the `item_create` view. This approach tests the full stack — form validation, view logic, and database state — in one pass.
+
+A class-level `@override_settings` decorator replaces `CompressedManifestStaticFilesStorage` with plain `StaticFilesStorage` so that template rendering succeeds without a pre-built static-file manifest.
+
+```python
+"""
+marketplace/tests.py
+====================
+Tests for the item-listing / uploading component.
+
+  TC01 — valid listing is posted and saved
+  TC02 — missing title is rejected
+  TC03 — missing description is rejected
+  TC04 — missing price is rejected
+  TC05 — negative price is rejected
+  TC06 — missing category is rejected
+  TC07 — multiple fields missing
+  TC08 — all fields empty
+"""
+
+from django.test import TestCase, Client, override_settings
+from django.urls import reverse
+from django.contrib.auth import get_user_model
+
+from marketplace.models import Category, Item
+
+User = get_user_model()
+
+_STATIC_OVERRIDE = override_settings(
+    STATICFILES_STORAGE='django.contrib.staticfiles.storage.StaticFilesStorage'
+)
+
+
+def make_user(email, full_name='Test User', password='TestPass123!'):
+    return User.objects.create_user(
+        email=email, password=password, full_name=full_name,
+    )
+
+
+@_STATIC_OVERRIDE
+class ItemListingTests(TestCase):
+
+    def setUp(self):
+        self.client   = Client()
+        self.seller   = make_user('seller@example.com', 'Seller')
+        self.category = Category.objects.create(name='Electronics')
+        self.url      = reverse('marketplace:item_create')
+        self.client.login(username='seller@example.com', password='TestPass123!')
+
+    def _valid_post(self, **overrides):
+        data = {
+            'itemName':    'Vintage Lamp',
+            'itemPrice':   '20.00',
+            'categoryID':  self.category.pk,
+            'condition':   'good',
+            'description': 'A beautiful vintage lamp.',
+            'city':        'Tirane',
+        }
+        data.update(overrides)
+        return data
+
+    def test_tc01_valid_listing_is_posted(self):
+        """TC01: All fields valid — item is saved and view redirects."""
+        response = self.client.post(self.url, data=self._valid_post())
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(Item.objects.filter(itemName='Vintage Lamp').exists())
+
+    def test_tc02_missing_title_is_rejected(self):
+        """TC02: Empty title — form must re-render with an error on itemName."""
+        response = self.client.post(self.url, data=self._valid_post(itemName=''))
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(Item.objects.exists())
+
+    def test_tc03_missing_description_is_rejected(self):
+        """TC03: Empty description — form must re-render with an error on description."""
+        response = self.client.post(self.url, data=self._valid_post(description=''))
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(Item.objects.exists())
+
+    def test_tc04_missing_price_is_rejected(self):
+        """TC04: Empty price — form must re-render with an error on itemPrice."""
+        response = self.client.post(self.url, data=self._valid_post(itemPrice=''))
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(Item.objects.exists())
+
+    def test_tc05_negative_price_is_rejected(self):
+        """TC05: Negative price — form must re-render with an error on itemPrice."""
+        response = self.client.post(self.url, data=self._valid_post(itemPrice='-10'))
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(Item.objects.exists())
+
+    def test_tc06_missing_category_is_rejected(self):
+        """TC06: No category selected — form must re-render with an error on categoryID."""
+        data = self._valid_post()
+        data.pop('categoryID')
+        response = self.client.post(self.url, data=data)
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(Item.objects.exists())
+
+    def test_tc07_multiple_fields_missing_is_rejected(self):
+        """TC07: Both title and price empty — form must re-render."""
+        response = self.client.post(
+            self.url, data=self._valid_post(itemName='', itemPrice=''))
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(Item.objects.exists())
+
+    def test_tc08_all_fields_empty_is_rejected(self):
+        """TC08: Completely empty POST — form must re-render, no item saved."""
+        response = self.client.post(self.url, data={})
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(Item.objects.exists())
+```
+
+---
+
+## 6. Running Tests
+
+Tests were executed using the project's virtual environment:
+
+```
+venv/Scripts/python.exe manage.py test marketplace --verbosity=2
+```
+
+### Full test output
+
+```
+Creating test database for alias 'default' ('file:memorydb_default?mode=memory&cache=shared')...
+Found 8 test(s).
+Operations to perform:
+  Synchronize unmigrated apps: allauth, crispy_bootstrap5, crispy_forms, django_filters, messages, staticfiles
+  Apply all migrations: account, admin, auth, contenttypes, marketplace, sessions, sites, users
+...all migrations applied OK...
+System check identified 3 issues (0 silenced).
+
+WARNINGS:
+?: settings.ACCOUNT_AUTHENTICATION_METHOD is deprecated, use: settings.ACCOUNT_LOGIN_METHODS = {'email'}
+?: settings.ACCOUNT_EMAIL_REQUIRED is deprecated, use: settings.ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
+?: settings.ACCOUNT_USERNAME_REQUIRED is deprecated, use: settings.ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
+
+test_tc01_valid_listing_is_posted (marketplace.tests.ItemListingTests)
+TC01: All fields valid — item is saved and view redirects. ... ok
+test_tc02_missing_title_is_rejected (marketplace.tests.ItemListingTests)
+TC02: Empty title — form must re-render with an error on itemName. ... ok
+test_tc03_missing_description_is_rejected (marketplace.tests.ItemListingTests)
+TC03: Empty description — form must re-render with an error on description. ... ok
+test_tc04_missing_price_is_rejected (marketplace.tests.ItemListingTests)
+TC04: Empty price — form must re-render with an error on itemPrice. ... ok
+test_tc05_negative_price_is_rejected (marketplace.tests.ItemListingTests)
+TC05: Negative price — form must re-render with an error on itemPrice. ... ok
+test_tc06_missing_category_is_rejected (marketplace.tests.ItemListingTests)
+TC06: No category selected — form must re-render with an error on categoryID. ... ok
+test_tc07_multiple_fields_missing_is_rejected (marketplace.tests.ItemListingTests)
+TC07: Both title and price empty — form must re-render. ... ok
+test_tc08_all_fields_empty_is_rejected (marketplace.tests.ItemListingTests)
+TC08: Completely empty POST — form must re-render, no item saved. ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 3.241s
+
+OK
+Destroying test database for alias 'default' ('file:memorydb_default?mode=memory&cache=shared')...
+```
+
+
+## 7. Test Coverage
+
+### What is currently covered
+
+| Area | Coverage |
+|------|----------|
+| Valid listing submission | TC01: all fields provided → HTTP 302, item saved in DB |
+| Title validation | TC02: missing title → form error, no item saved |
+| Description validation | TC03: missing description → form error, no item saved |
+| Price validation — missing | TC04: empty price → form error, no item saved |
+| Price validation — negative | TC05: negative price → form error, no item saved |
+| Category validation | TC06: no category → form error, no item saved |
+| Multiple missing fields | TC07: title + price empty → form error, no item saved |
+| All fields empty | TC08: empty POST → form errors on all required fields, no item saved |
