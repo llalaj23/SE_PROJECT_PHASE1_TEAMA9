@@ -14,7 +14,7 @@ The second component selected for testing is item listing. As the main purpose o
 Testing sees how it would react when there is missing information such as no pictures no title or information that is not valid such as negative numbers for a price.
 
 
-## The Browsing Function
+## The Item Listing Function
 
 4. Preparing Test Cases
 
