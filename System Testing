@@ -496,4 +496,4 @@ Destroying test database for alias 'default' ('file:memorydb_default?mode=memory
 | Sort ascending by price | TC07: result list is in non-decreasing price order |
 | Combined search + filter | TC08: both keyword and category constraints applied simultaneously |
 
-SCREENSHOTS/IMAGES OF TESTING =>
+SCREENSHOTS/IMAGES OF TESTING => https://github.com/llalaj23/SE_PROJECT_PHASE1_TEAMA9/tree/main/browsingFunctionTesting
