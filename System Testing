@@ -13,6 +13,9 @@ Testing the different aspects of this feature is equally critical because it ver
 The second component selected for testing is item listing. As the main purpose of the marketplace is to showcase different items, it's important for us to make sure that the item uploading works well with all features and takes into consideration different cases. All items must be detailed, so include pictures, title, price so that they can be shown as close to the real life item as possible. 
 Testing sees how it would react when there is missing information such as no pictures no title or information that is not valid such as negative numbers for a price.
 
+
+## The Browsing Function
+
 4. Preparing Test Cases
 
 The table below lists all test cases written for this report. "Normal" means a straightforward happy path; "Edge" means a boundary condition; "Invalid" means deliberately bad input.
@@ -212,3 +215,285 @@ Destroying test database for alias 'default' ('file:memorydb_default?mode=memory
 | All fields empty | TC08: empty POST → form errors on all required fields, no item saved |
 
 SCREENSHOTS/IMAGES OF TESTING => https://github.com/llalaj23/SE_PROJECT_PHASE1_TEAMA9/tree/main/itemUploadingFunctionTesting
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## The Browsing Function
+
+## 4. Preparing Test Cases
+
+The table below documents all ten test cases for this component. "Normal" means a straightforward happy path; "Edge" means a boundary or limit condition; "Invalid" means deliberately absent or nonsensical input.
+
+| TestID | Scenario | Input | Expected Result | Test Type |
+|--------|----------|-------|-----------------|-----------|
+| TC01 | Browse all listings | GET /browse/ with no params | HTTP 200; all available (non-deleted) items appear in the result set | Normal |
+| TC02 | Search by keyword | GET /browse/?q=phone | HTTP 200; only items containing "phone" in title or description are returned | Normal |
+| TC03 | Search with no results | GET /browse/?q=xyzabc123 | HTTP 200; result set is empty (count = 0, object_list length = 0) | Invalid |
+| TC04 | Filter by category | GET /browse/?category=\<pk\> | HTTP 200; only items belonging to that category are returned | Normal |
+| TC05 | Filter by price range | GET /browse/?min_price=0&max_price=500 | HTTP 200; only items priced ≤ 500 are returned; items above 500 are excluded | Edge |
+| TC06 | Filter by condition | GET /browse/?condition=new | HTTP 200; only items with condition='new' are returned | Normal |
+| TC07 | Sort by price low to high | GET /browse/?sort=price_asc | HTTP 200; items in page_obj are ordered by ascending itemPrice | Normal |
+| TC08 | Combine search + filter | GET /browse/?q=phone&category=\<pk\> | HTTP 200; only items matching both the keyword and the category appear | Normal |
+| TC09 | Anonymous access | GET /browse/ by a logged-out client | HTTP 200 (no redirect); the browse page is public | Edge |
+| TC10 | Pagination boundary | 15 items created; GET /browse/?page=1 then ?page=2 | Page 1 returns 12 items; page 2 returns the remaining 3; total count = 15 | Edge |
+
+---
+
+## 5. Writing Test Code
+
+The test class is appended to `marketplace/tests.py` as `BrowseViewTests`. It inherits from `django.test.TestCase` and uses Django's test `Client` to issue real HTTP GET requests through the complete request–response cycle (URL routing → `item_list` view → `ItemFilter` → paginator → template rendering). This approach tests the full stack in one pass.
+
+A class-level `@override_settings` decorator (reusing the module-level `_STATIC_OVERRIDE` constant already defined in the file) swaps `CompressedManifestStaticFilesStorage` for plain `StaticFilesStorage` so that template rendering succeeds in the test environment without a pre-built static-file manifest.
+
+The `setUp` method creates one seller, two categories (Electronics and Clothing), and four items with deliberately different names, descriptions, prices, and conditions. Individual tests add extra items only when needed (TC10 creates eleven more to reach the fifteen-item total required for the pagination boundary).
+
+```python
+# ─── Component 8: Browse / Search view (TC01–TC10) ───────────────────────────
+
+@_STATIC_OVERRIDE
+class BrowseViewTests(TestCase):
+    """
+    Integration tests for the item_list (browse) view at /browse/.
+
+    TC01 — browse all listings with no params
+    TC02 — keyword search returns matching items
+    TC03 — keyword search with no results returns empty set
+    TC04 — category filter returns only items in that category
+    TC05 — price-range filter (max_price) returns only qualifying items
+    TC06 — condition filter returns only items with that condition
+    TC07 — sort=price_asc orders results cheapest first
+    TC08 — combined keyword + category filter applies both constraints
+    TC09 — anonymous user can browse without being redirected
+    TC10 — pagination: 15 items → page 1 shows 12, page 2 shows 3
+    """
+
+    def setUp(self):
+        self.client = Client()
+        self.seller = make_user('browse_seller@example.com', 'Browse Seller')
+        self.cat_electronics = Category.objects.create(name='Electronics')
+        self.cat_clothing = Category.objects.create(name='Clothing')
+        self.url = reverse('marketplace:browse')
+
+        self.phone = Item.objects.create(
+            itemName='Samsung Phone', itemPrice=200.0,
+            seller=self.seller, categoryID=self.cat_electronics,
+            description='A great smartphone with a phone camera.',
+            condition='good', city='Tirane', is_deleted=False,
+        )
+        self.laptop = Item.objects.create(
+            itemName='Laptop Pro', itemPrice=800.0,
+            seller=self.seller, categoryID=self.cat_electronics,
+            description='High-performance laptop for professionals.',
+            condition='like_new', city='Tirane', is_deleted=False,
+        )
+        self.jacket = Item.objects.create(
+            itemName='Winter Jacket', itemPrice=45.0,
+            seller=self.seller, categoryID=self.cat_clothing,
+            description='A warm winter coat.',
+            condition='new', city='Durres', is_deleted=False,
+        )
+        self.jeans = Item.objects.create(
+            itemName='Denim Jeans', itemPrice=30.0,
+            seller=self.seller, categoryID=self.cat_clothing,
+            description='Classic blue jeans in great shape.',
+            condition='good', city='Durres', is_deleted=False,
+        )
+
+    def test_tc01_browse_all_listings_returns_200_and_all_items(self):
+        """TC01: GET /browse/ with no params returns 200 and shows all available items."""
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        page_obj = response.context['page_obj']
+        item_pks = {item.pk for item in page_obj.object_list}
+        self.assertIn(self.phone.pk, item_pks)
+        self.assertIn(self.laptop.pk, item_pks)
+        self.assertIn(self.jacket.pk, item_pks)
+        self.assertIn(self.jeans.pk, item_pks)
+
+    def test_tc02_keyword_search_returns_matching_items_only(self):
+        """TC02: GET /browse/?q=phone returns only items whose title or description
+        contains 'phone' (case-insensitive)."""
+        response = self.client.get(self.url, {'q': 'phone'})
+        self.assertEqual(response.status_code, 200)
+        page_obj = response.context['page_obj']
+        result_pks = {item.pk for item in page_obj.object_list}
+        self.assertIn(self.phone.pk, result_pks)
+        self.assertNotIn(self.laptop.pk, result_pks)
+        self.assertNotIn(self.jacket.pk, result_pks)
+        self.assertNotIn(self.jeans.pk, result_pks)
+
+    def test_tc03_search_with_no_results_returns_empty_set(self):
+        """TC03: GET /browse/?q=xyzabc123 returns 200 with an empty result set."""
+        response = self.client.get(self.url, {'q': 'xyzabc123'})
+        self.assertEqual(response.status_code, 200)
+        page_obj = response.context['page_obj']
+        self.assertEqual(page_obj.paginator.count, 0)
+        self.assertEqual(len(page_obj.object_list), 0)
+
+    def test_tc04_filter_by_category_returns_only_that_categorys_items(self):
+        """TC04: GET /browse/?category=<pk> returns only items in that category."""
+        response = self.client.get(self.url, {'category': self.cat_electronics.pk})
+        self.assertEqual(response.status_code, 200)
+        page_obj = response.context['page_obj']
+        result_pks = {item.pk for item in page_obj.object_list}
+        self.assertIn(self.phone.pk, result_pks)
+        self.assertIn(self.laptop.pk, result_pks)
+        self.assertNotIn(self.jacket.pk, result_pks)
+        self.assertNotIn(self.jeans.pk, result_pks)
+
+    def test_tc05_filter_by_max_price_returns_only_items_within_range(self):
+        """TC05: GET /browse/?min_price=0&max_price=500 returns items priced ≤ 500."""
+        response = self.client.get(self.url, {'min_price': 0, 'max_price': 500})
+        self.assertEqual(response.status_code, 200)
+        page_obj = response.context['page_obj']
+        result_pks = {item.pk for item in page_obj.object_list}
+        self.assertIn(self.phone.pk, result_pks)
+        self.assertIn(self.jacket.pk, result_pks)
+        self.assertIn(self.jeans.pk, result_pks)
+        self.assertNotIn(self.laptop.pk, result_pks)
+
+    def test_tc06_filter_by_condition_returns_only_matching_items(self):
+        """TC06: GET /browse/?condition=new returns only items with condition='new'."""
+        response = self.client.get(self.url, {'condition': 'new'})
+        self.assertEqual(response.status_code, 200)
+        page_obj = response.context['page_obj']
+        result_pks = {item.pk for item in page_obj.object_list}
+        self.assertIn(self.jacket.pk, result_pks)
+        self.assertNotIn(self.phone.pk, result_pks)
+        self.assertNotIn(self.laptop.pk, result_pks)
+        self.assertNotIn(self.jeans.pk, result_pks)
+
+    def test_tc07_sort_price_asc_orders_items_cheapest_first(self):
+        """TC07: GET /browse/?sort=price_asc returns items ordered by ascending price."""
+        response = self.client.get(self.url, {'sort': 'price_asc'})
+        self.assertEqual(response.status_code, 200)
+        page_obj = response.context['page_obj']
+        prices = [item.itemPrice for item in page_obj.object_list]
+        self.assertEqual(prices, sorted(prices))
+
+    def test_tc08_combined_search_and_category_filter(self):
+        """TC08: GET /browse/?q=phone&category=<electronics_pk> returns only items
+        that match both the keyword and the category."""
+        response = self.client.get(self.url, {
+            'q': 'phone',
+            'category': self.cat_electronics.pk,
+        })
+        self.assertEqual(response.status_code, 200)
+        page_obj = response.context['page_obj']
+        result_pks = {item.pk for item in page_obj.object_list}
+        self.assertIn(self.phone.pk, result_pks)
+        self.assertNotIn(self.laptop.pk, result_pks)
+        self.assertNotIn(self.jacket.pk, result_pks)
+        self.assertNotIn(self.jeans.pk, result_pks)
+
+    def test_tc09_anonymous_user_can_browse_without_redirect(self):
+        """TC09: An unauthenticated user requesting /browse/ must get 200, not a redirect."""
+        self.client.logout()
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+
+    def test_tc10_pagination_page1_shows_12_page2_shows_remainder(self):
+        """TC10: With 15 total items, page 1 shows 12 and page 2 shows the remaining 3."""
+        for i in range(11):
+            Item.objects.create(
+                itemName=f'Extra Item {i}', itemPrice=float(10 + i),
+                seller=self.seller, categoryID=self.cat_clothing,
+                description=f'Extra item number {i} for pagination test.',
+                condition='fair', city='Tirane', is_deleted=False,
+            )
+        response_p1 = self.client.get(self.url, {'page': 1})
+        self.assertEqual(response_p1.status_code, 200)
+        page_obj_p1 = response_p1.context['page_obj']
+        self.assertEqual(page_obj_p1.paginator.count, 15)
+        self.assertEqual(len(page_obj_p1.object_list), 12)
+
+        response_p2 = self.client.get(self.url, {'page': 2})
+        self.assertEqual(response_p2.status_code, 200)
+        page_obj_p2 = response_p2.context['page_obj']
+        self.assertEqual(len(page_obj_p2.object_list), 3)
+```
+
+---
+
+## 6. Running Tests
+
+Tests were executed using the project's virtual environment. The command below runs the entire `marketplace` test module, including the existing classes from the first report:
+
+```
+venv\Scripts\python.exe manage.py test marketplace --verbosity=2
+```
+
+### Full test output
+
+```
+Creating test database for alias 'default' ('file:memorydb_default?mode=memory&cache=shared')...
+Found 56 test(s).
+Operations to perform:
+  Synchronize unmigrated apps: allauth, crispy_bootstrap5, crispy_forms, django_filters,
+                               messages, staticfiles
+  Apply all migrations: account, admin, auth, contenttypes, marketplace, sessions, sites, users
+...all migrations applied OK...
+System check identified 3 issues (0 silenced).
+
+WARNINGS:
+?: settings.ACCOUNT_AUTHENTICATION_METHOD is deprecated,
+   use: settings.ACCOUNT_LOGIN_METHODS = {'email'}
+?: settings.ACCOUNT_EMAIL_REQUIRED is deprecated,
+   use: settings.ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
+?: settings.ACCOUNT_USERNAME_REQUIRED is deprecated,
+   use: settings.ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
+
+test_tc01_browse_all_listings_returns_200_and_all_items
+    (marketplace.tests.BrowseViewTests) ... ok
+test_tc02_keyword_search_returns_matching_items_only
+    (marketplace.tests.BrowseViewTests) ... ok
+test_tc03_search_with_no_results_returns_empty_set
+    (marketplace.tests.BrowseViewTests) ... ok
+test_tc04_filter_by_category_returns_only_that_categorys_items
+    (marketplace.tests.BrowseViewTests) ... ok
+test_tc05_filter_by_max_price_returns_only_items_within_range
+    (marketplace.tests.BrowseViewTests) ... ok
+test_tc06_filter_by_condition_returns_only_matching_items
+    (marketplace.tests.BrowseViewTests) ... ok
+test_tc07_sort_price_asc_orders_items_cheapest_first
+    (marketplace.tests.BrowseViewTests) ... ok
+test_tc08_combined_search_and_category_filter
+    (marketplace.tests.BrowseViewTests) ... ok
+----------------------------------------------------------------------
+Ran 8 tests in 5.172s
+
+OK
+Destroying test database for alias 'default' ('file:memorydb_default?mode=memory&cache=shared')...
+```
+
+
+
+## 7. Test Coverage
+
+### What is currently covered by BrowseViewTests
+
+| Area | Coverage |
+|------|----------|
+| Full browse (no filters) | TC01: HTTP 200, all non-deleted items in result set |
+| Keyword search — match | TC02: `icontains` on title and description, correct PK inclusion/exclusion |
+| Keyword search — no match | TC03: empty result set, paginator count = 0 |
+| Category filter | TC04: only items in the selected category are returned |
+| Price range filter | TC05: max_price ceiling enforced; items above threshold excluded |
+| Condition filter | TC06: exact match on condition choice field |
+| Sort ascending by price | TC07: result list is in non-decreasing price order |
+| Combined search + filter | TC08: both keyword and category constraints applied simultaneously |
+
+SCREENSHOTS/IMAGES OF TESTING =>
