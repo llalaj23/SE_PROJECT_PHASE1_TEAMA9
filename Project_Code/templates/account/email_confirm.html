@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}Confirm Email — Again &amp; Again{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+<div class="col-lg-5 col-xl-4">
+
+  <div class="card border-0 shadow-sm">
+    <div class="card-header bg-dark text-white fw-semibold">
+      <i class="bi bi-envelope-check me-2"></i>Confirm Email Address
+    </div>
+    <div class="card-body p-4 text-center">
+
+      {% if confirmation %}
+        {% if can_confirm %}
+          <div class="mb-4">
+            <i class="bi bi-envelope-open text-warning" style="font-size:3rem;"></i>
+          </div>
+          <p class="mb-1 text-muted small">You are confirming the email address for:</p>
+          <p class="fw-semibold mb-4">{{ confirmation.email_address.email }}</p>
+
+          <form method="post" action="{% url 'account_confirm_email' confirmation.key %}">
+            {% csrf_token %}
+            {{ redirect_field }}
+            <button type="submit" class="btn btn-dark fw-semibold w-100">
+              <i class="bi bi-check-lg me-1"></i>Confirm Email Address
+            </button>
+          </form>
+
+        {% else %}
+          <div class="mb-4">
+            <i class="bi bi-x-circle text-danger" style="font-size:3rem;"></i>
+          </div>
+          <p class="text-muted">
+            Unable to confirm this email address — it has already been confirmed by a different account.
+          </p>
+          <a href="{% url 'marketplace:home' %}" class="btn btn-outline-dark btn-sm mt-2">
+            <i class="bi bi-house me-1"></i>Go Home
+          </a>
+        {% endif %}
+
+      {% else %}
+        <div class="mb-4">
+          <i class="bi bi-clock-history text-warning" style="font-size:3rem;"></i>
+        </div>
+        <h5 class="fw-bold mb-2">Link Expired</h5>
+        <p class="text-muted mb-4">
+          This confirmation link has expired or is invalid.
+        </p>
+        <a href="{% url 'account_email' %}" class="btn btn-dark fw-semibold w-100">
+          <i class="bi bi-arrow-repeat me-1"></i>Request a New Link
+        </a>
+      {% endif %}
+
+    </div>
+  </div>
+
+</div>
+</div>
+{% endblock %}

@@ -1,0 +1,393 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ item.itemName }} — Again &amp; Again{% endblock %}
+
+{% block extra_head %}
+<!-- Swiper CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+<!-- GLightbox CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/glightbox/dist/css/glightbox.min.css" />
+{% endblock %}
+
+{% block content %}
+<div class="row g-5">
+
+  <!-- ── Left: Image Carousel ──────────────────────────────────────────── -->
+  <div class="col-lg-6">
+    {% if images %}
+      <!-- Swiper wrapper -->
+      <div class="swiper item-swiper rounded shadow-sm">
+        <div class="swiper-wrapper">
+          {% for image in images %}
+            <div class="swiper-slide">
+              <a href="{{ image.image.url }}" class="glightbox" data-gallery="item-gallery">
+                <img src="{{ image.image.url }}"
+                     class="d-block w-100 object-fit-cover rounded"
+                     style="max-height: 420px;"
+                     alt="{{ item.itemName }}">
+              </a>
+            </div>
+          {% endfor %}
+        </div>
+        <!-- Navigation arrows -->
+        <div class="swiper-button-prev"></div>
+        <div class="swiper-button-next"></div>
+        <!-- Pagination dots -->
+        <div class="swiper-pagination"></div>
+      </div>
+    {% else %}
+      <img src="{% static 'img/placeholder.png' %}"
+           class="img-fluid rounded shadow-sm w-100 object-fit-cover"
+           style="max-height: 420px;"
+           alt="No image available">
+    {% endif %}
+  </div><!-- /col left -->
+
+  <!-- ── Right: Item Details ───────────────────────────────────────────── -->
+  <div class="col-lg-6">
+
+    <!-- Title & Price -->
+    <h1 class="h2 fw-bold mb-1">{{ item.itemName }}</h1>
+    <p class="display-6 text-success fw-bold mb-3">{{ item.itemPrice|floatformat:0 }} Lek</p>
+
+    <!-- Badges: Condition + Status -->
+    <div class="mb-3 d-flex gap-2 flex-wrap">
+      {% if item.condition == 'new' %}
+        <span class="badge bg-success fs-6">New</span>
+      {% elif item.condition == 'like_new' %}
+        <span class="badge bg-primary fs-6">Like New</span>
+      {% elif item.condition == 'good' %}
+        <span class="badge bg-secondary fs-6">Good</span>
+      {% elif item.condition == 'fair' %}
+        <span class="badge bg-warning text-dark fs-6">Fair</span>
+      {% elif item.condition == 'poor' %}
+        <span class="badge bg-danger fs-6">Poor</span>
+      {% else %}
+        <span class="badge bg-secondary fs-6">{{ item.condition }}</span>
+      {% endif %}
+
+      {% if item.status == 'active' %}
+        <span class="badge bg-success fs-6">Available</span>
+      {% elif item.status == 'sold' %}
+        <span class="badge bg-danger fs-6">Sold</span>
+      {% elif item.status == 'reserved' %}
+        <span class="badge bg-warning text-dark fs-6">Reserved</span>
+      {% else %}
+        <span class="badge bg-secondary fs-6">{{ item.status }}</span>
+      {% endif %}
+    </div>
+
+    <!-- Category -->
+    {% if item.categoryID %}
+      <p class="text-muted mb-2">
+        <i class="bi bi-tag me-1"></i>
+        <strong>Category:</strong> {{ item.categoryID.name }}
+      </p>
+    {% endif %}
+
+    <!-- City -->
+    {% if item.city %}
+      <p class="text-muted mb-2">
+        <i class="bi bi-geo-alt me-1"></i>
+        <strong>Location:</strong> {{ item.city }}
+      </p>
+    {% endif %}
+
+    <!-- Date listed -->
+    <p class="text-muted mb-3 small">
+      <i class="bi bi-clock me-1"></i>Listed on {{ item.createdAt|date:"N j, Y" }}
+    </p>
+
+    <!-- Description -->
+    <div class="mb-4">
+      <h5 class="fw-semibold">Description</h5>
+      <p class="text-secondary" style="white-space: pre-line;">{{ item.description }}</p>
+    </div>
+
+    <!-- Seller Card -->
+    <div class="card mb-4 shadow-sm">
+      <div class="card-header bg-light fw-semibold">
+        <i class="bi bi-person-circle me-1"></i>Seller Info
+      </div>
+      <div class="card-body d-flex align-items-center gap-3">
+        {% if item.seller.profile_picture %}
+          <img src="{{ item.seller.profile_picture.url }}"
+               class="rounded-circle object-fit-cover"
+               style="width:60px; height:60px;"
+               alt="{{ item.seller.full_name }}">
+        {% else %}
+          <span class="bi bi-person-circle text-secondary" style="font-size: 3.5rem;"></span>
+        {% endif %}
+        <div class="flex-grow-1">
+          <p class="mb-0 fw-semibold">{{ item.seller.full_name }}</p>
+          <!-- Star rating -->
+          <div class="text-warning mb-1" title="{{ item.seller.rating }} / 5">
+            {% with item.seller.rating|floatformat:0 as full_stars %}
+              {% for i in "12345" %}
+                {% if forloop.counter <= full_stars|add:"0" %}
+                  <i class="bi bi-star-fill"></i>
+                {% else %}
+                  <i class="bi bi-star"></i>
+                {% endif %}
+              {% endfor %}
+            {% endwith %}
+            <small class="text-muted ms-1">({{ item.seller.rating }})</small>
+          </div>
+          <small class="text-muted">Member since {{ item.seller.createdAt|date:"Y" }}</small>
+        </div>
+        <a href="{% url 'users:public_profile' item.seller.pk %}"
+           class="btn btn-outline-secondary btn-sm">
+          <i class="bi bi-person me-1"></i>View Profile
+        </a>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    {% if user.is_authenticated and user == item.seller %}
+      <!-- Owner controls -->
+      <div class="d-flex gap-2 flex-wrap">
+        {% if item.status == 'available' %}
+          <a href="{% url 'marketplace:item_edit' item.pk %}" class="btn btn-warning">
+            <i class="bi bi-pencil me-1"></i>Edit Listing
+          </a>
+          <a href="{% url 'marketplace:item_delete' item.pk %}" class="btn btn-danger">
+            <i class="bi bi-trash me-1"></i>Delete
+          </a>
+        {% endif %}
+        {% if item.status == 'reserved' %}
+          <form method="post" action="{% url 'marketplace:item_mark_sold' item.pk %}" class="d-inline">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-success">
+              <i class="bi bi-check-circle me-1"></i>Mark as Sold
+            </button>
+          </form>
+          <form method="post" action="{% url 'marketplace:item_mark_available' item.pk %}" class="d-inline">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline-secondary">
+              <i class="bi bi-arrow-repeat me-1"></i>Reopen
+            </button>
+          </form>
+          <a href="{% url 'marketplace:offers_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-tag me-1"></i>View Offers
+          </a>
+        {% endif %}
+        {% if item.status == 'sold' %}
+          <span class="badge bg-success fs-6 py-2 px-3">
+            <i class="bi bi-check-circle me-1"></i>Sold
+          </span>
+          <form method="post" action="{% url 'marketplace:item_mark_available' item.pk %}" class="d-inline">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline-secondary btn-sm">
+              <i class="bi bi-arrow-repeat me-1"></i>Reopen listing
+            </button>
+          </form>
+        {% endif %}
+      </div>
+
+    {% else %}
+      <!-- Buyer controls -->
+      <div class="d-flex gap-2 flex-wrap mb-3">
+        {% if user.is_authenticated %}
+          <a href="{% url 'marketplace:conversation' item.pk item.seller.pk %}" class="btn btn-dark">
+            <i class="bi bi-chat-dots me-1"></i>Contact Seller
+          </a>
+          <a href="{% url 'marketplace:report_create' 'item' item.pk %}"
+             class="btn btn-outline-danger btn-sm align-self-center">
+            <i class="bi bi-flag me-1"></i>Report
+          </a>
+          <button type="button"
+                  class="btn {% if is_wishlisted %}btn-warning{% else %}btn-outline-warning{% endif %} wishlist-btn"
+                  data-toggle-url="{% url 'marketplace:wishlist_toggle' item.pk %}">
+            <i class="bi bi-heart{% if is_wishlisted %}-fill{% endif %} me-1"></i>
+            {% if is_wishlisted %}Saved{% else %}Save{% endif %}
+          </button>
+        {% else %}
+          <a href="{% url 'account_login' %}?next={{ request.path }}" class="btn btn-dark">
+            <i class="bi bi-chat-dots me-1"></i>Contact Seller
+          </a>
+          <a href="{% url 'account_login' %}?next={{ request.path }}" class="btn btn-outline-warning">
+            <i class="bi bi-heart me-1"></i>Save
+          </a>
+        {% endif %}
+      </div>
+
+      <!-- Offer section -->
+      {% if user.is_authenticated and item.status == 'available' %}
+        <hr class="my-3">
+        {% if not user_offer or user_offer.status == 'rejected' %}
+          <!-- No offer yet (or previous one was rejected) — show make-offer form -->
+          <h6 class="fw-semibold mb-2"><i class="bi bi-tag me-1"></i>Make an Offer</h6>
+          <form method="post" action="{% url 'marketplace:offer_make' item.pk %}"
+                class="d-flex gap-2 align-items-center">
+            {% csrf_token %}
+            <div class="input-group" style="max-width:220px;">
+              <input type="number" name="offered_price" class="form-control"
+                     placeholder="Your price" min="1" step="1" required>
+              <span class="input-group-text">Lek</span>
+            </div>
+            <button type="submit" class="btn btn-outline-dark">
+              <i class="bi bi-send me-1"></i>Send Offer
+            </button>
+          </form>
+          {% if user_offer and user_offer.status == 'rejected' %}
+            <small class="text-muted mt-1 d-block">Your previous offer was declined. You can try again.</small>
+          {% endif %}
+
+        {% elif user_offer.status == 'pending' and user_offer.from_buyer %}
+          <!-- Offer sent, waiting for seller -->
+          <div class="alert alert-info d-flex align-items-center gap-2 mb-0">
+            <i class="bi bi-hourglass-split"></i>
+            <div>
+              Your offer of <strong>{{ user_offer.offered_price|floatformat:0 }} Lek</strong> is pending.
+              Waiting for the seller to respond.
+              <a href="{% url 'marketplace:offers_list' %}" class="alert-link ms-1">View offers</a>
+            </div>
+          </div>
+
+        {% elif user_offer.status == 'pending' and not user_offer.from_buyer %}
+          <!-- Seller countered — buyer needs to respond -->
+          <div class="alert alert-warning d-flex align-items-center gap-2 mb-0">
+            <i class="bi bi-arrow-left-right"></i>
+            <div>
+              The seller countered with <strong>{{ user_offer.offered_price|floatformat:0 }} Lek</strong>.
+              <a href="{% url 'marketplace:offers_list' %}" class="btn btn-sm btn-warning ms-2">
+                Respond
+              </a>
+            </div>
+          </div>
+
+        {% elif user_offer.status == 'accepted' %}
+          <div class="alert alert-success d-flex align-items-center gap-2 mb-0">
+            <i class="bi bi-check-circle-fill"></i>
+            <div>
+              Your offer was <strong>accepted</strong>!
+              Contact the seller to arrange payment.
+            </div>
+          </div>
+
+        {% elif user_offer.status == 'countered' %}
+          <!-- This offer was countered — there's a newer pending offer, link to offers page -->
+          <div class="alert alert-secondary d-flex align-items-center gap-2 mb-0">
+            <i class="bi bi-arrow-repeat"></i>
+            <div>
+              Negotiation in progress.
+              <a href="{% url 'marketplace:offers_list' %}" class="alert-link">View your offers</a>
+            </div>
+          </div>
+        {% endif %}
+
+      {% elif user.is_authenticated and item.status == 'reserved' %}
+        <div class="alert alert-warning mb-0">
+          <i class="bi bi-lock me-1"></i>This item is currently <strong>reserved</strong>.
+        </div>
+      {% elif user.is_authenticated and item.status == 'sold' %}
+        <div class="alert alert-secondary mb-0">
+          <i class="bi bi-x-circle me-1"></i>This item has been <strong>sold</strong>.
+        </div>
+      {% endif %}
+    {% endif %}
+
+
+  </div><!-- /col right -->
+
+</div><!-- /row -->
+{% endblock %}
+
+{% block extra_js %}
+<!-- Swiper JS -->
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+<!-- GLightbox JS -->
+<script src="https://cdn.jsdelivr.net/npm/glightbox/dist/js/glightbox.min.js"></script>
+<script>
+  // Initialise Swiper carousel
+  const swiper = new Swiper('.item-swiper', {
+    loop: true,
+    pagination: {
+      el: '.swiper-pagination',
+      clickable: true,
+    },
+    navigation: {
+      nextEl: '.swiper-button-next',
+      prevEl: '.swiper-button-prev',
+    },
+  });
+
+  // Initialise GLightbox for full-screen image preview
+  const lightbox = GLightbox({
+    selector: '.glightbox',
+    touchNavigation: true,
+    loop: true,
+  });
+</script>
+
+<!-- Interactive star rating -->
+<script>
+(function () {
+  const labels = document.querySelectorAll('.star-label');
+  if (!labels.length) return;
+
+  const submitBtn = document.getElementById('review-submit');
+  const submitHint = document.getElementById('submit-hint');
+  const starHint = document.getElementById('star-hint');
+
+  function highlight(upTo) {
+    labels.forEach((lbl, i) => {
+      const icon = lbl.querySelector('.star-icon');
+      icon.classList.toggle('bi-star-fill', i <= upTo);
+      icon.classList.toggle('bi-star', i > upTo);
+    });
+  }
+
+  function getSelected() {
+    const checked = document.querySelector('.star-input:checked');
+    return checked ? parseInt(checked.value) - 1 : -1;
+  }
+
+  labels.forEach((lbl, i) => {
+    lbl.addEventListener('mouseenter', () => highlight(i));
+    lbl.addEventListener('click', () => {
+      lbl.querySelector('.star-input').checked = true;
+      highlight(i);
+      // Enable submit
+      if (submitBtn) { submitBtn.disabled = false; }
+      if (submitHint) { submitHint.textContent = ''; }
+      if (starHint) { starHint.textContent = (i + 1) + ' star' + (i > 0 ? 's' : '') + ' selected'; }
+    });
+  });
+
+  document.getElementById('star-row').addEventListener('mouseleave', () => {
+    highlight(getSelected());
+  });
+})();
+</script>
+
+<!-- Wishlist heart toggle -->
+<script>
+document.querySelectorAll('.wishlist-btn').forEach(function (btn) {
+  btn.addEventListener('click', async function () {
+    const url = this.dataset.toggleUrl;
+    try {
+      const r = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': getCSRFToken(),
+          'X-Requested-With': 'XMLHttpRequest',
+        },
+      });
+      if (!r.ok) return;
+      const data = await r.json();
+      if (data.saved) {
+        this.classList.remove('btn-outline-warning');
+        this.classList.add('btn-warning');
+        this.innerHTML = '<i class="bi bi-heart-fill me-1"></i>Saved';
+      } else {
+        this.classList.remove('btn-warning');
+        this.classList.add('btn-outline-warning');
+        this.innerHTML = '<i class="bi bi-heart me-1"></i>Save';
+      }
+    } catch (_) {}
+  });
+});
+</script>
+{% endblock %}

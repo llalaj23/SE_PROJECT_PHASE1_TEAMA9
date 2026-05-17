@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block title %}Notifications — Again &amp; Again{% endblock %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="fw-semibold mb-0">
+    <i class="bi bi-bell me-2"></i>Notifications
+  </h4>
+  {% if notifications %}
+    <form method="post" action="{% url 'marketplace:mark_notifications_read' %}">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-check2-all me-1"></i>Mark all read
+      </button>
+    </form>
+  {% endif %}
+</div>
+
+{% if notifications %}
+  <div class="list-group shadow-sm">
+    {% for notif in notifications %}
+      <a href="{{ notif.link|default:'#' }}"
+         class="list-group-item list-group-item-action py-3 {% if not notif.is_read %}list-group-item-warning border-start border-warning border-4{% endif %}">
+        <div class="d-flex w-100 justify-content-between align-items-start gap-3">
+          <div>
+            {% if notif.notification_type == 'new_message' %}
+              <i class="bi bi-chat-dots me-2 text-primary"></i>
+            {% elif notif.notification_type == 'new_offer' or notif.notification_type == 'offer_countered' %}
+              <i class="bi bi-currency-exchange me-2 text-warning"></i>
+            {% elif notif.notification_type == 'offer_accepted' %}
+              <i class="bi bi-check-circle me-2 text-success"></i>
+            {% elif notif.notification_type == 'offer_rejected' %}
+              <i class="bi bi-x-circle me-2 text-danger"></i>
+            {% elif notif.notification_type == 'item_sold' %}
+              <i class="bi bi-bag-check me-2 text-success"></i>
+            {% elif notif.notification_type == 'new_review' %}
+              <i class="bi bi-star me-2 text-warning"></i>
+            {% else %}
+              <i class="bi bi-bell me-2 text-secondary"></i>
+            {% endif %}
+            {{ notif.message }}
+          </div>
+          <small class="text-muted text-nowrap">{{ notif.created_at|timesince }} ago</small>
+        </div>
+      </a>
+    {% endfor %}
+  </div>
+
+{% else %}
+  <div class="text-center text-muted py-5">
+    <i class="bi bi-bell-slash" style="font-size:3rem;"></i>
+    <p class="mt-3 fs-5">No notifications yet.</p>
+    <a href="{% url 'marketplace:browse' %}" class="btn btn-outline-dark mt-2">
+      <i class="bi bi-grid me-1"></i>Browse Listings
+    </a>
+  </div>
+{% endif %}
+
+{% endblock %}

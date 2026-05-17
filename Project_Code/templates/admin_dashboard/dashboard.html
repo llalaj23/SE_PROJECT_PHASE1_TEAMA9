@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+{% block title %}Admin Dashboard — Again &amp; Again{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <h4 class="fw-bold mb-0"><i class="bi bi-shield-check me-2"></i>Admin Dashboard</h4>
+  <span class="badge bg-danger">Staff Only</span>
+</div>
+
+<div class="row g-4">
+
+  <!-- ── Left: Reports ──────────────────────────────────────────────────── -->
+  <div class="col-lg-8">
+
+    <!-- Open reports -->
+    <h6 class="text-uppercase text-muted fw-semibold small mb-2">
+      Open Reports
+      <span class="badge bg-danger ms-1">{{ open_reports|length }}</span>
+    </h6>
+
+    {% if open_reports %}
+      <div class="d-flex flex-column gap-3 mb-4">
+        {% for report in open_reports %}
+          <div class="card border-0 shadow-sm">
+            <div class="card-body py-3 px-3">
+
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <div>
+                  <span class="badge bg-secondary me-1">{{ report.get_reason_display }}</span>
+                  <small class="text-muted">{{ report.reportedAt|date:"d M Y, H:i" }}</small>
+                </div>
+                <div class="d-flex gap-2">
+                  <form method="post"
+                        action="{% url 'marketplace:admin_resolve_report' report.pk %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="resolved">
+                    <button class="btn btn-success btn-sm">
+                      <i class="bi bi-check-lg me-1"></i>Resolve
+                    </button>
+                  </form>
+                  <form method="post"
+                        action="{% url 'marketplace:admin_resolve_report' report.pk %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="dismissed">
+                    <button class="btn btn-outline-secondary btn-sm">
+                      Dismiss
+                    </button>
+                  </form>
+                </div>
+              </div>
+
+              <div class="small mb-1">
+                <strong>Reporter:</strong>
+                <a href="{% url 'users:public_profile' report.reporterID.pk %}" class="text-dark">
+                  {{ report.reporterID.full_name }}
+                </a>
+                &rarr;
+                <strong>Reported:</strong>
+                <a href="{% url 'users:public_profile' report.reporteeID.pk %}" class="text-dark">
+                  {{ report.reporteeID.full_name }}
+                </a>
+              </div>
+
+              {% if report.itemID %}
+                <div class="small text-muted mb-1">
+                  <i class="bi bi-tag me-1"></i>
+                  <a href="{% url 'marketplace:item_detail' report.itemID.pk %}" class="text-muted">
+                    {{ report.itemID.itemName }}
+                  </a>
+                </div>
+              {% endif %}
+
+              {% if report.reportDescription %}
+                <p class="mb-0 small text-muted border-start border-danger ps-2 mt-2">
+                  {{ report.reportDescription }}
+                </p>
+              {% endif %}
+
+              <!-- Ban button shortcut -->
+              {% if report.reporteeID.is_active %}
+                <form method="post"
+                      action="{% url 'marketplace:admin_toggle_user' report.reporteeID.pk %}"
+                      class="mt-2">
+                  {% csrf_token %}
+                  <button class="btn btn-danger btn-sm">
+                    <i class="bi bi-person-x me-1"></i>Ban {{ report.reporteeID.full_name }}
+                  </button>
+                </form>
+              {% else %}
+                <span class="badge bg-danger mt-2">User is already banned</span>
+              {% endif %}
+
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="text-center text-muted py-4 border rounded mb-4">
+        <i class="bi bi-check-circle" style="font-size:2rem;"></i>
+        <p class="mt-2 mb-0 small">No open reports.</p>
+      </div>
+    {% endif %}
+
+    <!-- Resolved / dismissed reports -->
+    {% if resolved_reports %}
+      <h6 class="text-uppercase text-muted fw-semibold small mb-2">Recently Resolved</h6>
+      <div class="card border-0 shadow-sm overflow-hidden">
+        {% for report in resolved_reports %}
+          <div class="d-flex align-items-center gap-3 px-3 py-2
+                      {% if not forloop.last %}border-bottom{% endif %}">
+            <span class="badge {% if report.status == 'resolved' %}bg-success{% else %}bg-secondary{% endif %}">
+              {{ report.status }}
+            </span>
+            <div class="flex-grow-1 overflow-hidden" style="min-width:0;">
+              <span class="small fw-semibold">{{ report.reporteeID.full_name }}</span>
+              <span class="text-muted small ms-1">— {{ report.get_reason_display }}</span>
+            </div>
+            <small class="text-muted text-nowrap">{{ report.reportedAt|date:"d M" }}</small>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+  </div>
+
+  <!-- ── Right: User Management ─────────────────────────────────────────── -->
+  <div class="col-lg-4">
+    <h6 class="text-uppercase text-muted fw-semibold small mb-2">User Management</h6>
+
+    <form method="get" class="mb-3">
+      <div class="input-group">
+        <input type="text" name="q" value="{{ query }}"
+               class="form-control form-control-sm"
+               placeholder="Search by name or email…">
+        <button class="btn btn-dark btn-sm" type="submit">
+          <i class="bi bi-search"></i>
+        </button>
+      </div>
+    </form>
+
+    {% if users %}
+      <div class="card border-0 shadow-sm overflow-hidden">
+        {% for u in users %}
+          <div class="d-flex align-items-center gap-2 px-3 py-2
+                      {% if not forloop.last %}border-bottom{% endif %}">
+            {% if u.profile_picture %}
+              <img src="{{ u.profile_picture.url }}"
+                   class="rounded-circle object-fit-cover flex-shrink-0"
+                   style="width:32px;height:32px;" alt="">
+            {% else %}
+              <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center flex-shrink-0"
+                   style="width:32px;height:32px;">
+                <i class="bi bi-person-fill text-white" style="font-size:.75rem;"></i>
+              </div>
+            {% endif %}
+            <div class="flex-grow-1 overflow-hidden" style="min-width:0;">
+              <div class="small fw-semibold text-truncate">{{ u.full_name }}</div>
+              <div class="text-muted text-truncate" style="font-size:.72rem;">{{ u.email }}</div>
+            </div>
+            <form method="post" action="{% url 'marketplace:admin_toggle_user' u.pk %}">
+              {% csrf_token %}
+              {% if u.is_active %}
+                <button class="btn btn-outline-danger btn-sm" style="font-size:.7rem;padding:2px 7px;"
+                        title="Ban user">
+                  Ban
+                </button>
+              {% else %}
+                <button class="btn btn-outline-success btn-sm" style="font-size:.7rem;padding:2px 7px;"
+                        title="Unban user">
+                  Unban
+                </button>
+              {% endif %}
+            </form>
+          </div>
+        {% endfor %}
+      </div>
+    {% elif query %}
+      <p class="text-muted small">No users found for "{{ query }}".</p>
+    {% else %}
+      <p class="text-muted small">Search for a user above to manage their account.</p>
+    {% endif %}
+
+    <!-- Banned Users -->
+    <h6 class="text-uppercase text-muted fw-semibold small mb-2 mt-4">
+      <i class="bi bi-person-slash me-1"></i>Banned Users
+      <span class="badge bg-danger ms-1">{{ banned_users|length }}</span>
+    </h6>
+
+    {% if banned_users %}
+      <div class="card border-0 shadow-sm overflow-hidden">
+        {% for u in banned_users %}
+          <div class="d-flex align-items-center gap-2 px-3 py-2
+                      {% if not forloop.last %}border-bottom{% endif %}">
+            {% if u.profile_picture %}
+              <img src="{{ u.profile_picture.url }}"
+                   class="rounded-circle object-fit-cover flex-shrink-0"
+                   style="width:32px;height:32px;" alt="">
+            {% else %}
+              <div class="rounded-circle bg-danger d-flex align-items-center justify-content-center flex-shrink-0"
+                   style="width:32px;height:32px;">
+                <i class="bi bi-person-fill text-white" style="font-size:.75rem;"></i>
+              </div>
+            {% endif %}
+            <div class="flex-grow-1 overflow-hidden" style="min-width:0;">
+              <div class="small fw-semibold text-truncate">{{ u.full_name }}</div>
+              <div class="text-muted text-truncate" style="font-size:.72rem;">{{ u.email }}</div>
+            </div>
+            <form method="post" action="{% url 'marketplace:admin_toggle_user' u.pk %}">
+              {% csrf_token %}
+              <button class="btn btn-outline-success btn-sm" style="font-size:.7rem;padding:2px 7px;"
+                      title="Unban user">
+                Unban
+              </button>
+            </form>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="text-center text-muted py-3 border rounded" style="font-size:.85rem;">
+        <i class="bi bi-check-circle me-1"></i>No banned users.
+      </div>
+    {% endif %}
+
+  </div>
+
+</div>
+{% endblock %}

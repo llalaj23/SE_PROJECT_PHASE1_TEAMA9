@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Edit Profile — Again &amp; Again{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-7 col-xl-6">
+
+    <div class="d-flex align-items-center justify-content-between mb-4">
+      <h2 class="fw-bold mb-0"><i class="bi bi-person-gear me-2"></i>Edit Profile</h2>
+      <a href="{% url 'users:profile' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Back
+      </a>
+    </div>
+
+    <div class="card shadow-sm border-0">
+      <div class="card-body p-4">
+
+        <!-- Current avatar preview -->
+        <div class="text-center mb-4">
+          {% if user.profile_picture %}
+            <img src="{{ user.profile_picture.url }}" id="avatar-preview"
+                 class="rounded-circle border shadow" width="100" height="100"
+                 style="object-fit:cover;" alt="Avatar">
+          {% else %}
+            <div id="avatar-placeholder"
+                 class="rounded-circle border shadow bg-secondary d-flex align-items-center justify-content-center mx-auto"
+                 style="width:100px;height:100px;">
+              <i class="bi bi-person-fill text-white" style="font-size:3rem;"></i>
+            </div>
+            <img id="avatar-preview" src="" class="rounded-circle border shadow d-none"
+                 width="100" height="100" style="object-fit:cover;" alt="Avatar">
+          {% endif %}
+          <p class="text-muted small mt-2">Choose a new photo below to update your avatar</p>
+        </div>
+
+        <form method="post" enctype="multipart/form-data" novalidate>
+          {% csrf_token %}
+          {{ form|crispy }}
+          <div class="d-flex gap-2 justify-content-end mt-4">
+            <a href="{% url 'users:profile' %}" class="btn btn-outline-secondary">Cancel</a>
+            <button type="submit" class="btn btn-warning fw-semibold">
+              <i class="bi bi-check-lg me-1"></i>Save Changes
+            </button>
+          </div>
+        </form>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Live avatar preview when a new picture is selected
+  const picInput = document.querySelector('input[name="profile_picture"]');
+  if (picInput) {
+    picInput.addEventListener('change', function () {
+      const file = this.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        const preview = document.getElementById('avatar-preview');
+        const placeholder = document.getElementById('avatar-placeholder');
+        preview.src = e.target.result;
+        preview.classList.remove('d-none');
+        if (placeholder) placeholder.classList.add('d-none');
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+</script>
+{% endblock %}

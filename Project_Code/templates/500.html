@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block title %}Server Error — Again &amp; Again{% endblock %}
+
+{% block content %}
+<div class="text-center py-5">
+  <div class="mb-4" style="font-size: 6rem; line-height: 1;">&#128565;</div>
+  <h1 class="display-4 fw-bold mb-2">500</h1>
+  <h2 class="h4 text-muted mb-4">Something Went Wrong</h2>
+  <p class="text-muted mb-4">
+    We hit an unexpected error on our end. Please try again in a moment.
+  </p>
+  <div class="d-flex gap-3 justify-content-center flex-wrap">
+    <a href="{% url 'marketplace:home' %}" class="btn btn-dark btn-lg">
+      <i class="bi bi-house me-2"></i>Go Home
+    </a>
+    <button onclick="window.location.reload()" class="btn btn-outline-dark btn-lg">
+      <i class="bi bi-arrow-clockwise me-2"></i>Try Again
+    </button>
+  </div>
+</div>
+{% endblock %}

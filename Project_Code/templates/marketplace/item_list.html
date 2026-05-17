@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}
+  {% if query %}Search: "{{ query }}"{% else %}Browse Listings{% endif %} — Again &amp; Again
+{% endblock %}
+
+{% block content %}
+
+<!-- ─── Page header ───────────────────────────────────────────────────────── -->
+<div class="d-flex flex-wrap align-items-center justify-content-between mb-3 gap-2">
+  <div>
+    <h4 class="fw-semibold mb-0">
+      {% if query %}
+        Results for <em>"{{ query }}"</em>
+      {% else %}
+        Browse Listings
+      {% endif %}
+    </h4>
+    <p class="text-muted small mb-0">{{ result_count }} listing{{ result_count|pluralize }} found</p>
+  </div>
+  <!-- Sort dropdown -->
+  <form method="get" action="" id="sort-form" class="d-flex align-items-center gap-2">
+    <!-- Preserve existing GET params as hidden inputs -->
+    {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
+    {% for key, val in request.GET.items %}
+      {% if key != 'sort' and key != 'page' and key != 'q' %}
+        <input type="hidden" name="{{ key }}" value="{{ val }}">
+      {% endif %}
+    {% endfor %}
+    <label for="sort-select" class="form-label mb-0 text-nowrap small fw-semibold">Sort:</label>
+    <select id="sort-select" name="sort" class="form-select form-select-sm" style="width:auto;"
+            onchange="document.getElementById('sort-form').submit()">
+      {% for val, label in sort_labels %}
+        <option value="{{ val }}" {% if sort == val %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+  </form>
+</div>
+
+<!-- ─── Search bar ────────────────────────────────────────────────────────── -->
+<form method="get" action="" class="mb-4">
+  <!-- Preserve non-search filters -->
+  {% for key, val in request.GET.items %}
+    {% if key != 'q' and key != 'page' %}
+      <input type="hidden" name="{{ key }}" value="{{ val }}">
+    {% endif %}
+  {% endfor %}
+  <div class="input-group">
+    <span class="input-group-text bg-white border-end-0">
+      <i class="bi bi-search text-muted"></i>
+    </span>
+    <input type="text" name="q" value="{{ query }}"
+           class="form-control border-start-0 ps-0"
+           placeholder="Search listings by keyword…"
+           aria-label="Search">
+    <button type="submit" class="btn btn-dark">Search</button>
+    {% if query %}
+      <a href="{% url 'marketplace:browse' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-x-lg"></i>
+      </a>
+    {% endif %}
+  </div>
+</form>
+
+<!-- ─── Sidebar + Cards grid ─────────────────────────────────────────────── -->
+{% include 'marketplace/_item_grid.html' %}
+
+{% endblock %}

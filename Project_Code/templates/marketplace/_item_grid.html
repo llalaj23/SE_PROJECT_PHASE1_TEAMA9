@@ -1,0 +1,222 @@
+{% load static %}
+<div class="row g-4">
+
+  <!-- ── Filter Sidebar ─────────────────────────────────────────────────── -->
+  <div class="col-md-3">
+    <div class="card shadow-sm">
+      <div class="card-header bg-dark text-white fw-semibold">
+        <i class="bi bi-funnel me-1"></i>Filter Listings
+      </div>
+      <div class="card-body">
+        <form method="get" action="">
+          {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
+
+          <!-- Category -->
+          <div class="mb-3">
+            <label for="filter-category" class="form-label fw-semibold">Category</label>
+            <select id="filter-category" name="category" class="form-select form-select-sm">
+              <option value="">All Categories</option>
+              {% for cat in categories %}
+                <option value="{{ cat.pk }}"
+                  {% if request.GET.category == cat.pk|stringformat:"s" %}selected{% endif %}>
+                  {{ cat.name }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Price range -->
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Price (Lek)</label>
+            <div class="input-group input-group-sm">
+              <input type="number" name="min_price" placeholder="Min"
+                     value="{{ request.GET.min_price }}"
+                     class="form-control" min="0">
+              <span class="input-group-text">–</span>
+              <input type="number" name="max_price" placeholder="Max"
+                     value="{{ request.GET.max_price }}"
+                     class="form-control" min="0">
+            </div>
+          </div>
+
+          <!-- Condition -->
+          <div class="mb-3">
+            <label for="filter-condition" class="form-label fw-semibold">Condition</label>
+            <select id="filter-condition" name="condition" class="form-select form-select-sm">
+              <option value="">Any Condition</option>
+              {% for val, label in condition_choices %}
+                <option value="{{ val }}"
+                  {% if request.GET.condition == val %}selected{% endif %}>
+                  {{ label }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- City -->
+          <div class="mb-3">
+            <label for="filter-city" class="form-label fw-semibold">City</label>
+            <input type="text" id="filter-city" name="city"
+                   placeholder="e.g. Tirana"
+                   value="{{ request.GET.city }}"
+                   class="form-control form-control-sm">
+          </div>
+
+          <!-- Preserve sort -->
+          {% if request.GET.sort %}
+            <input type="hidden" name="sort" value="{{ request.GET.sort }}">
+          {% endif %}
+
+          <!-- Buttons -->
+          <div class="d-grid gap-2">
+            <button type="submit" class="btn btn-dark btn-sm">
+              <i class="bi bi-funnel me-1"></i>Apply Filters
+            </button>
+            <a href="{% url 'marketplace:browse' %}{% if query %}?q={{ query }}{% endif %}"
+               class="btn btn-outline-secondary btn-sm">
+              <i class="bi bi-x-circle me-1"></i>Clear Filters
+            </a>
+          </div>
+
+        </form>
+      </div>
+    </div>
+  </div><!-- /sidebar -->
+
+  <!-- ── Item Cards ─────────────────────────────────────────────────────── -->
+  <div class="col-md-9">
+
+    {% if page_obj %}
+      <div class="row row-cols-1 row-cols-sm-2 row-cols-xl-3 g-4">
+        {% for item in page_obj %}
+          <div class="col">
+            <div class="card h-100 shadow-sm">
+
+              <!-- Primary image -->
+              {% with item_images=item.images.all %}
+                {% for img in item_images %}
+                  {% if img.is_primary %}
+                    <img src="{{ img.image.url }}"
+                         class="card-img-top object-fit-cover" style="height:200px;"
+                         alt="{{ item.itemName }}">
+                  {% endif %}
+                {% empty %}
+                  <div class="card-img-top d-flex align-items-center justify-content-center bg-light"
+                       style="height:200px;">
+                    <i class="bi bi-image text-muted" style="font-size:2.5rem;"></i>
+                  </div>
+                {% endfor %}
+                {% if not item_images %}
+                  <div class="card-img-top d-flex align-items-center justify-content-center bg-light"
+                       style="height:200px;">
+                    <i class="bi bi-image text-muted" style="font-size:2.5rem;"></i>
+                  </div>
+                {% endif %}
+              {% endwith %}
+
+              <div class="card-body d-flex flex-column">
+                <h5 class="card-title text-truncate mb-1">{{ item.itemName }}</h5>
+                <p class="card-text text-success fw-bold mb-1">
+                  {{ item.itemPrice|floatformat:0 }} Lek
+                </p>
+
+                <!-- Condition badge -->
+                <p class="card-text mb-1">
+                  {% if item.condition == 'new' %}
+                    <span class="badge bg-success">New</span>
+                  {% elif item.condition == 'like_new' %}
+                    <span class="badge bg-primary">Like New</span>
+                  {% elif item.condition == 'good' %}
+                    <span class="badge bg-secondary">Good</span>
+                  {% elif item.condition == 'fair' %}
+                    <span class="badge bg-warning text-dark">Fair</span>
+                  {% elif item.condition == 'poor' %}
+                    <span class="badge bg-danger">Poor</span>
+                  {% else %}
+                    <span class="badge bg-secondary">{{ item.condition }}</span>
+                  {% endif %}
+                </p>
+
+                {% if item.city %}
+                  <p class="card-text text-muted small mb-2">
+                    <i class="bi bi-geo-alt me-1"></i>{{ item.city }}
+                  </p>
+                {% endif %}
+
+                <div class="mt-auto">
+                  <a href="{% url 'marketplace:item_detail' item.pk %}"
+                     class="btn btn-outline-dark btn-sm w-100">
+                    View Details
+                  </a>
+                </div>
+              </div><!-- /card-body -->
+
+            </div><!-- /card -->
+          </div><!-- /col -->
+        {% endfor %}
+      </div><!-- /row cards -->
+
+      <!-- Pagination — uses page_params (no 'page' key) to avoid duplicate page= params -->
+      {% if page_obj.has_other_pages %}
+        <nav class="mt-4" aria-label="Listings pagination">
+          <ul class="pagination justify-content-center flex-wrap">
+
+            {% if page_obj.has_previous %}
+              <li class="page-item">
+                <a class="page-link"
+                   href="?{{ page_params }}{% if page_params %}&{% endif %}page={{ page_obj.previous_page_number }}">
+                  <i class="bi bi-chevron-left"></i>
+                </a>
+              </li>
+            {% else %}
+              <li class="page-item disabled">
+                <span class="page-link"><i class="bi bi-chevron-left"></i></span>
+              </li>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+              {% if num == page_obj.number %}
+                <li class="page-item active" aria-current="page">
+                  <span class="page-link">{{ num }}</span>
+                </li>
+              {% elif num >= page_obj.number|add:"-3" and num <= page_obj.number|add:"3" %}
+                <li class="page-item">
+                  <a class="page-link"
+                     href="?{{ page_params }}{% if page_params %}&{% endif %}page={{ num }}">
+                    {{ num }}
+                  </a>
+                </li>
+              {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+              <li class="page-item">
+                <a class="page-link"
+                   href="?{{ page_params }}{% if page_params %}&{% endif %}page={{ page_obj.next_page_number }}">
+                  <i class="bi bi-chevron-right"></i>
+                </a>
+              </li>
+            {% else %}
+              <li class="page-item disabled">
+                <span class="page-link"><i class="bi bi-chevron-right"></i></span>
+              </li>
+            {% endif %}
+
+          </ul>
+        </nav>
+      {% endif %}<!-- /pagination -->
+
+    {% else %}
+      <!-- Empty state -->
+      <div class="text-center text-muted py-5">
+        <i class="bi bi-box-seam" style="font-size: 3rem;"></i>
+        <p class="mt-3 fs-5">No listings found. Try adjusting your search or filters.</p>
+        <a href="{% url 'marketplace:browse' %}" class="btn btn-outline-secondary mt-2">
+          <i class="bi bi-x-circle me-1"></i>Clear All
+        </a>
+      </div>
+    {% endif %}
+
+  </div><!-- /col-md-9 -->
+
+</div><!-- /row -->

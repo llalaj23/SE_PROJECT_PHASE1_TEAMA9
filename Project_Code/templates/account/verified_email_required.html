@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block title %}Email Verification Required — Again &amp; Again{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+<div class="col-lg-5 col-xl-4">
+
+  <div class="card border-0 shadow-sm text-center">
+    <div class="card-body p-5">
+
+      <i class="bi bi-shield-exclamation text-warning" style="font-size:4rem;"></i>
+      <h4 class="fw-bold mt-3 mb-2">Email Verification Required</h4>
+      <p class="text-muted mb-4">
+        You need to verify your email address before accessing this page.
+        Please check your inbox for the verification link we sent you.
+      </p>
+
+      <div class="d-flex flex-column gap-2">
+        <a href="{% url 'account_email' %}" class="btn btn-dark fw-semibold">
+          <i class="bi bi-arrow-repeat me-1"></i>Re-send Verification Email
+        </a>
+        <a href="{% url 'account_email' %}" class="btn btn-outline-secondary btn-sm">
+          <i class="bi bi-envelope me-1"></i>Change Email Address
+        </a>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+</div>
+{% endblock %}

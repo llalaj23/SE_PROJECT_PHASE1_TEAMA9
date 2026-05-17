@@ -1,23 +1,183 @@
-{% extends "base.html" %}
-
-{% block title %}Home — Again & Again{% endblock %}
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Again &amp; Again — Albanian Second-Hand Marketplace{% endblock %}
 
 {% block content %}
 
-<!-- Hero Section -->
-<div class="p-5 mb-4 bg-dark text-white rounded-3 text-center">
-  <h1 class="fw-bold display-5">Buy &amp; Sell Second-Hand in Albania</h1>
-  <p class="lead mt-2">Give your unused items a new home. Find great deals near you.</p>
-  {% if not user.is_authenticated %}
-    <a href="{% url 'account_signup' %}" class="btn btn-light btn-lg me-2">Get Started</a>
-    <a href="{% url 'account_login' %}" class="btn btn-outline-light btn-lg">Login</a>
+<!-- ─── Hero ──────────────────────────────────────────────────────────────── -->
+<div class="px-4 py-5 mb-5 bg-dark text-white rounded-4 text-center">
+  <h1 class="display-5 fw-bold mb-2">
+    <i class="bi bi-arrow-repeat me-2"></i>Again &amp; Again
+  </h1>
+  <p class="lead mb-4">Albania's second-hand marketplace. Buy smart, sell easy.</p>
+
+  <!-- Hero search form -->
+  <form method="get" action="{% url 'marketplace:browse' %}" class="d-flex justify-content-center gap-2 flex-wrap">
+    <div class="input-group" style="max-width: 520px;">
+      <span class="input-group-text bg-white border-end-0">
+        <i class="bi bi-search text-muted"></i>
+      </span>
+      <input type="text" name="q" class="form-control border-start-0 ps-0"
+             placeholder="Search for anything…" aria-label="Search listings">
+      <button type="submit" class="btn btn-warning fw-semibold px-4">Search</button>
+    </div>
+  </form>
+
+  <p class="mt-3 mb-0">
+    <a href="{% url 'marketplace:browse' %}" class="text-white-50 small">
+      <i class="bi bi-grid me-1"></i>Browse all listings →
+    </a>
+  </p>
+</div>
+
+<!-- ─── Category Quick Browse ─────────────────────────────────────────────── -->
+{% if categories %}
+<h4 class="fw-semibold mb-3">Browse by Category</h4>
+<div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-6 g-3 mb-5">
+  {% for cat in categories %}
+  <div class="col">
+    <a href="{% url 'marketplace:browse' %}?category={{ cat.pk }}"
+       class="card text-center text-decoration-none h-100 shadow-sm border-0 category-card">
+      <div class="card-body py-3 px-2">
+        <div class="fs-2 mb-1">
+          {% if "electronic" in cat.name|lower %}&#128241;
+          {% elif "cloth" in cat.name|lower or "fashion" in cat.name|lower %}&#128248;
+          {% elif "book" in cat.name|lower %}&#128218;
+          {% elif "sport" in cat.name|lower %}&#9917;
+          {% elif "toy" in cat.name|lower or "kid" in cat.name|lower %}&#127931;
+          {% elif "home" in cat.name|lower or "furniture" in cat.name|lower %}&#127968;
+          {% elif "car" in cat.name|lower or "vehicle" in cat.name|lower %}&#128664;
+          {% elif "garden" in cat.name|lower %}&#127807;
+          {% elif "music" in cat.name|lower %}&#127925;
+          {% elif "art" in cat.name|lower %}&#127912;
+          {% elif "shoe" in cat.name|lower %}&#128099;
+          {% elif "food" in cat.name|lower %}&#127859;
+          {% else %}&#128722;{% endif %}
+        </div>
+        <p class="card-text small fw-semibold text-dark mb-0 text-truncate">{{ cat.name }}</p>
+      </div>
+    </a>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- ─── Recent Listings ────────────────────────────────────────────────────── -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4 class="fw-semibold mb-0">Recently Listed</h4>
+  <a href="{% url 'marketplace:browse' %}" class="btn btn-sm btn-outline-dark">
+    View all <i class="bi bi-arrow-right ms-1"></i>
+  </a>
+</div>
+
+{% if recent_items %}
+  <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 g-4 mb-3" id="recent-grid">
+    {% for item in recent_items %}
+    <div class="col{% if forloop.counter > 4 %} d-none extra-listing{% endif %}">
+      <div class="card h-100 shadow-sm">
+
+        <!-- Primary image -->
+        {% with primary=item.images.all %}
+          {% for img in primary %}
+            {% if img.is_primary %}
+              <img src="{{ img.image.url }}"
+                   class="card-img-top object-fit-cover" style="height:180px;"
+                   alt="{{ item.itemName }}">
+            {% endif %}
+          {% empty %}
+            <div class="card-img-top d-flex align-items-center justify-content-center bg-light"
+                 style="height:180px;">
+              <i class="bi bi-image text-muted" style="font-size:2.5rem;"></i>
+            </div>
+          {% endfor %}
+          {% if not primary %}
+            <div class="card-img-top d-flex align-items-center justify-content-center bg-light"
+                 style="height:180px;">
+              <i class="bi bi-image text-muted" style="font-size:2.5rem;"></i>
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        <div class="card-body d-flex flex-column py-3">
+          <h6 class="card-title text-truncate mb-1">{{ item.itemName }}</h6>
+          <p class="text-success fw-bold mb-1 small">{{ item.itemPrice|floatformat:0 }} Lek</p>
+
+          {% if item.condition == 'new' %}
+            <span class="badge bg-success mb-2" style="width:fit-content;">New</span>
+          {% elif item.condition == 'like_new' %}
+            <span class="badge bg-primary mb-2" style="width:fit-content;">Like New</span>
+          {% elif item.condition == 'good' %}
+            <span class="badge bg-secondary mb-2" style="width:fit-content;">Good</span>
+          {% elif item.condition == 'fair' %}
+            <span class="badge bg-warning text-dark mb-2" style="width:fit-content;">Fair</span>
+          {% elif item.condition == 'poor' %}
+            <span class="badge bg-danger mb-2" style="width:fit-content;">Poor</span>
+          {% endif %}
+
+          {% if item.city %}
+            <p class="text-muted small mb-2">
+              <i class="bi bi-geo-alt me-1"></i>{{ item.city }}
+            </p>
+          {% endif %}
+
+          <div class="mt-auto">
+            <a href="{% url 'marketplace:item_detail' item.pk %}"
+               class="btn btn-outline-dark btn-sm w-100">View Details</a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% if recent_items|length > 4 %}
+    <div class="text-center mb-5">
+      <button id="show-more-btn" class="btn btn-outline-dark btn-sm px-4">
+        <i class="bi bi-chevron-down me-1"></i>Show More
+      </button>
+    </div>
   {% endif %}
-</div>
 
-<!-- Placeholder message — listings will appear here in Sprint 2 -->
-<div class="text-center text-muted py-5">
-  <i class="bi bi-box-seam" style="font-size: 3rem;"></i>
-  <p class="mt-3 fs-5">Listings coming in Sprint 2.</p>
-</div>
+{% else %}
+  <div class="text-center text-muted py-5 mb-5">
+    <i class="bi bi-box-seam" style="font-size:3rem;"></i>
+    <p class="mt-3">No listings yet. Be the first to sell something!</p>
+    {% if user.is_authenticated %}
+      <a href="{% url 'marketplace:item_create' %}" class="btn btn-warning mt-2">
+        <i class="bi bi-plus-circle me-1"></i>Post a Listing
+      </a>
+    {% endif %}
+  </div>
+{% endif %}
 
+<!-- ─── CTA banner ─────────────────────────────────────────────────────────── -->
+{% if not user.is_authenticated %}
+<div class="bg-warning rounded-4 p-4 text-center mb-4">
+  <h5 class="fw-bold mb-2">Ready to sell something?</h5>
+  <p class="mb-3 text-dark">Join thousands of Albanians buying and selling second-hand items every day.</p>
+  <a href="{% url 'account_signup' %}" class="btn btn-dark btn-lg me-2">Create Account</a>
+  <a href="{% url 'account_login' %}" class="btn btn-outline-dark btn-lg">Log In</a>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_head %}
+<style>
+  .category-card { transition: transform .15s, box-shadow .15s; }
+  .category-card:hover { transform: translateY(-3px); box-shadow: 0 .5rem 1rem rgba(0,0,0,.12) !important; }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const btn = document.getElementById('show-more-btn');
+  if (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('.extra-listing').forEach(el => el.classList.remove('d-none'));
+      this.remove();
+    });
+  }
+</script>
 {% endblock %}

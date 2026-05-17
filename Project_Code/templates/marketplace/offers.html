@@ -1,0 +1,263 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block title %}My Offers — Again &amp; Again{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+<div class="col-lg-8 col-xl-7">
+
+  <h5 class="fw-semibold mb-4"><i class="bi bi-tag me-2"></i>My Offers</h5>
+
+  <!-- ── Needs Your Response ──────────────────────────────────────────────── -->
+  {% if pending_mine %}
+    <h6 class="text-uppercase text-muted fw-semibold small mb-2 letter-spacing-1">
+      Needs Your Response
+    </h6>
+    {% for entry in pending_mine %}
+      {% with offer=entry.offer chain=entry.chain %}
+      <div class="card border-0 shadow-sm mb-3">
+
+        <!-- Item header -->
+        <div class="card-header bg-white border-bottom d-flex align-items-center gap-3 py-2 px-3">
+          {% with offer.item.images.all as imgs %}
+            {% for img in imgs %}{% if img.is_primary %}
+              <img src="{{ img.image.url }}" class="rounded object-fit-cover flex-shrink-0"
+                   style="width:40px;height:40px;" alt="">
+            {% endif %}{% empty %}
+              <div class="rounded bg-light d-flex align-items-center justify-content-center flex-shrink-0"
+                   style="width:40px;height:40px;">
+                <i class="bi bi-image text-muted"></i>
+              </div>
+            {% endfor %}
+          {% endwith %}
+          <div class="flex-grow-1 overflow-hidden" style="min-width:0;">
+            <a href="{% url 'marketplace:item_detail' offer.item.pk %}"
+               class="fw-semibold text-dark text-decoration-none text-truncate d-block">
+              {{ offer.item.itemName }}
+            </a>
+            <small class="text-muted">Listed at {{ offer.item.itemPrice|floatformat:0 }} Lek</small>
+          </div>
+          <span class="badge bg-danger">Action Required</span>
+        </div>
+
+        <!-- Offer chain history -->
+        {% if chain|length > 1 %}
+          <div class="px-3 pt-2 pb-1">
+            <small class="text-muted fw-semibold d-block mb-1">Negotiation History</small>
+            {% for c in chain %}
+              {% if not forloop.last %}
+                <div class="d-flex align-items-center gap-2 mb-1" style="opacity:.6;">
+                  <span class="badge {% if c.from_buyer %}bg-dark{% else %}bg-secondary{% endif %} text-white"
+                        style="font-size:.65rem;">
+                    {% if c.from_buyer %}Buyer{% else %}Seller{% endif %}
+                  </span>
+                  <span class="small">{{ c.offered_price|floatformat:0 }} Lek</span>
+                  <span class="badge bg-light text-muted border" style="font-size:.65rem;">{{ c.status }}</span>
+                  <small class="text-muted ms-auto">{{ c.created_at|naturaltime }}</small>
+                </div>
+              {% endif %}
+            {% endfor %}
+          </div>
+          <hr class="my-0">
+        {% endif %}
+
+        <!-- Current offer -->
+        <div class="card-body px-3 py-3">
+          <div class="d-flex align-items-center gap-3 mb-3">
+            {% if offer.initiator.profile_picture %}
+              <img src="{{ offer.initiator.profile_picture.url }}"
+                   class="rounded-circle object-fit-cover flex-shrink-0"
+                   style="width:36px;height:36px;" alt="">
+            {% else %}
+              <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center flex-shrink-0"
+                   style="width:36px;height:36px;">
+                <i class="bi bi-person-fill text-white"></i>
+              </div>
+            {% endif %}
+            <div>
+              <span class="fw-semibold">
+                <a href="{% url 'users:public_profile' offer.initiator.pk %}"
+                   class="text-dark text-decoration-none">
+                  {{ offer.initiator.full_name }}
+                </a>
+              </span>
+              {% if offer.from_buyer %}
+                <span class="text-muted small"> offered</span>
+              {% else %}
+                <span class="text-muted small"> countered with</span>
+              {% endif %}
+              <span class="fw-bold text-success ms-1">{{ offer.offered_price|floatformat:0 }} Lek</span>
+            </div>
+            <small class="text-muted ms-auto">{{ offer.created_at|naturaltime }}</small>
+          </div>
+
+          <!-- Action buttons -->
+          <div class="d-flex gap-2 flex-wrap">
+            <!-- Accept -->
+            <form method="post" action="{% url 'marketplace:offer_respond' offer.pk %}">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="accept">
+              <button type="submit" class="btn btn-success btn-sm">
+                <i class="bi bi-check-lg me-1"></i>Accept
+              </button>
+            </form>
+
+            <!-- Reject -->
+            <form method="post" action="{% url 'marketplace:offer_respond' offer.pk %}">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="reject">
+              <button type="submit" class="btn btn-outline-danger btn-sm">
+                <i class="bi bi-x-lg me-1"></i>Reject
+              </button>
+            </form>
+
+            <!-- Counter — toggled inline -->
+            <button class="btn btn-outline-secondary btn-sm"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#counter-{{ offer.pk }}">
+              <i class="bi bi-arrow-left-right me-1"></i>Counter
+            </button>
+          </div>
+
+          <!-- Counter-offer form (collapsed by default) -->
+          <div class="collapse mt-3" id="counter-{{ offer.pk }}">
+            <form method="post" action="{% url 'marketplace:offer_respond' offer.pk %}"
+                  class="d-flex gap-2 align-items-center">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="counter">
+              <div class="input-group" style="max-width:200px;">
+                <input type="number" name="counter_price" class="form-control form-control-sm"
+                       placeholder="Your price" min="1" step="1" required>
+                <span class="input-group-text">Lek</span>
+              </div>
+              <button type="submit" class="btn btn-dark btn-sm">
+                <i class="bi bi-send me-1"></i>Send Counter
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+      {% endwith %}
+    {% endfor %}
+  {% endif %}
+
+  <!-- ── Waiting for Other Party ──────────────────────────────────────────── -->
+  {% if pending_theirs %}
+    <h6 class="text-uppercase text-muted fw-semibold small mb-2 mt-4">
+      Waiting for Response
+    </h6>
+    {% for offer in pending_theirs %}
+      <div class="card border-0 shadow-sm mb-2">
+        <div class="card-body d-flex align-items-center gap-3 py-2 px-3">
+          {% with offer.item.images.all as imgs %}
+            {% for img in imgs %}{% if img.is_primary %}
+              <img src="{{ img.image.url }}" class="rounded object-fit-cover flex-shrink-0"
+                   style="width:36px;height:36px;" alt="">
+            {% endif %}{% empty %}
+              <div class="rounded bg-light d-flex align-items-center justify-content-center flex-shrink-0"
+                   style="width:36px;height:36px;">
+                <i class="bi bi-image text-muted"></i>
+              </div>
+            {% endfor %}
+          {% endwith %}
+          <div class="flex-grow-1 overflow-hidden" style="min-width:0;">
+            <a href="{% url 'marketplace:item_detail' offer.item.pk %}"
+               class="fw-semibold text-dark text-decoration-none text-truncate d-block">
+              {{ offer.item.itemName }}
+            </a>
+            <small class="text-muted">
+              Your offer: <strong>{{ offer.offered_price|floatformat:0 }} Lek</strong>
+              &mdash; sent {{ offer.created_at|naturaltime }}
+            </small>
+          </div>
+          <div class="d-flex align-items-center gap-2 flex-shrink-0">
+            <span class="badge bg-warning text-dark">Pending</span>
+            {% if offer.buyer == request.user %}
+              <a href="{% url 'marketplace:conversation' offer.item.pk offer.seller.pk %}"
+                 class="btn btn-outline-dark btn-sm">
+                <i class="bi bi-chat me-1"></i>Contact Seller
+              </a>
+            {% else %}
+              <a href="{% url 'marketplace:conversation' offer.item.pk offer.buyer.pk %}"
+                 class="btn btn-outline-dark btn-sm">
+                <i class="bi bi-chat me-1"></i>Contact Buyer
+              </a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <!-- ── No active offers ─────────────────────────────────────────────────── -->
+  {% if not pending_mine and not pending_theirs %}
+    <div class="text-center text-muted py-4">
+      <i class="bi bi-tag" style="font-size:2.5rem;"></i>
+      <p class="mt-2">No active offers right now.</p>
+      <a href="{% url 'marketplace:browse' %}" class="btn btn-outline-dark btn-sm mt-1">
+        <i class="bi bi-grid me-1"></i>Browse Listings
+      </a>
+    </div>
+  {% endif %}
+
+  <!-- ── Past Offers ──────────────────────────────────────────────────────── -->
+  {% if past %}
+    <h6 class="text-uppercase text-muted fw-semibold small mb-2 mt-4">
+      Past Offers
+    </h6>
+    <div class="card border-0 shadow-sm overflow-hidden">
+      {% for offer in past %}
+        <div class="d-flex align-items-center gap-3 px-3 py-2
+                    {% if not forloop.last %}border-bottom{% endif %}">
+          {% with offer.item.images.all as imgs %}
+            {% for img in imgs %}{% if img.is_primary %}
+              <img src="{{ img.image.url }}" class="rounded object-fit-cover flex-shrink-0"
+                   style="width:32px;height:32px;" alt="">
+            {% endif %}{% empty %}
+              <div class="rounded bg-light d-flex align-items-center justify-content-center flex-shrink-0"
+                   style="width:32px;height:32px;">
+                <i class="bi bi-image text-muted" style="font-size:.75rem;"></i>
+              </div>
+            {% endfor %}
+          {% endwith %}
+          <div class="flex-grow-1 overflow-hidden" style="min-width:0;">
+            <a href="{% url 'marketplace:item_detail' offer.item.pk %}"
+               class="text-dark text-decoration-none text-truncate d-block small fw-semibold">
+              {{ offer.item.itemName }}
+            </a>
+            <small class="text-muted">
+              {{ offer.offered_price|floatformat:0 }} Lek
+              &mdash; {{ offer.created_at|naturaltime }}
+            </small>
+          </div>
+          <div class="d-flex align-items-center gap-2 flex-shrink-0">
+            {% if offer.status == 'accepted' %}
+              <span class="badge bg-success">Accepted</span>
+            {% elif offer.status == 'rejected' %}
+              <span class="badge bg-danger">Rejected</span>
+            {% endif %}
+            {% if offer.item %}
+              {% if offer.buyer == request.user %}
+                <a href="{% url 'marketplace:conversation' offer.item.pk offer.seller.pk %}"
+                   class="btn btn-outline-dark btn-sm">
+                  <i class="bi bi-chat me-1"></i>Contact Seller
+                </a>
+              {% else %}
+                <a href="{% url 'marketplace:conversation' offer.item.pk offer.buyer.pk %}"
+                   class="btn btn-outline-dark btn-sm">
+                  <i class="bi bi-chat me-1"></i>Contact Buyer
+                </a>
+              {% endif %}
+            {% endif %}
+          </div>
+        </div>
+
+      {% endfor %}
+    </div>
+  {% endif %}
+
+</div>
+</div>
+{% endblock %}
+

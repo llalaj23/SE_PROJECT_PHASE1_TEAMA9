@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+{% block title %}Report — Again &amp; Again{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+<div class="col-lg-6 col-xl-5">
+
+  <div class="card border-0 shadow-sm">
+    <div class="card-header bg-danger text-white fw-semibold">
+      <i class="bi bi-flag me-2"></i>Submit a Report
+    </div>
+    <div class="card-body p-4">
+
+      <!-- What / who is being reported -->
+      <div class="mb-4 p-3 bg-light rounded d-flex align-items-center gap-3">
+        <i class="bi bi-exclamation-triangle text-danger fs-4"></i>
+        <div>
+          {% if report_type == 'item' %}
+            <div class="fw-semibold">Reporting listing:</div>
+            <div class="text-muted small">{{ reported_item.itemName }}</div>
+          {% else %}
+            <div class="fw-semibold">Reporting user:</div>
+            <div class="text-muted small">{{ reported_user.full_name }}</div>
+          {% endif %}
+        </div>
+      </div>
+
+      <form method="post" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+
+        <!-- Reason -->
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Reason <span class="text-danger">*</span></label>
+          {% for value, label in form.fields.reason.choices %}
+            <div class="form-check mb-1">
+              <input class="form-check-input" type="radio"
+                     name="reason" value="{{ value }}"
+                     id="reason_{{ value }}"
+                     {% if form.reason.value == value %}checked{% endif %}>
+              <label class="form-check-label" for="reason_{{ value }}">{{ label }}</label>
+            </div>
+          {% endfor %}
+        </div>
+
+        <!-- Details + photo button -->
+        <div class="mb-4">
+          <div class="d-flex align-items-center justify-content-between mb-1">
+            <label class="form-label fw-semibold mb-0">
+              Additional details
+              <span class="text-muted fw-normal">(optional)</span>
+            </label>
+            <!-- + photo button -->
+            <button type="button" class="btn btn-outline-secondary btn-sm"
+                    id="photo-btn" title="Attach a screenshot">
+              <i class="bi bi-plus-lg me-1"></i>Photo
+            </button>
+          </div>
+
+          <textarea name="reportDescription" rows="3" class="form-control"
+                    placeholder="Describe what happened…">{{ form.reportDescription.value|default:'' }}</textarea>
+
+          <!-- Hidden file input -->
+          <input type="file" name="screenshot" id="screenshot-input"
+                 accept="image/jpeg,image/png,image/webp"
+                 class="d-none">
+
+          <!-- Preview -->
+          <div id="photo-preview" class="mt-2 d-none">
+            <div class="position-relative d-inline-block">
+              <img id="preview-img"
+                   class="rounded border object-fit-cover"
+                   style="max-height:120px; max-width:100%;" alt="Screenshot preview">
+              <button type="button" id="remove-photo"
+                      class="btn btn-danger btn-sm position-absolute top-0 end-0 p-0 lh-1"
+                      style="width:20px;height:20px;font-size:12px;"
+                      title="Remove photo">&times;</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="d-flex gap-2 justify-content-end">
+          {% if report_type == 'item' %}
+            <a href="{% url 'marketplace:item_detail' reported_item.pk %}" class="btn btn-outline-secondary">
+              Cancel
+            </a>
+          {% else %}
+            <a href="{% url 'users:public_profile' reported_user.pk %}" class="btn btn-outline-secondary">
+              Cancel
+            </a>
+          {% endif %}
+          <button type="submit" class="btn btn-danger fw-semibold">
+            <i class="bi bi-flag me-1"></i>Submit Report
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
+</div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  const btn     = document.getElementById('photo-btn');
+  const input   = document.getElementById('screenshot-input');
+  const preview = document.getElementById('photo-preview');
+  const img     = document.getElementById('preview-img');
+  const remove  = document.getElementById('remove-photo');
+
+  btn.addEventListener('click', () => input.click());
+
+  input.addEventListener('change', function () {
+    const file = this.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      img.src = e.target.result;
+      preview.classList.remove('d-none');
+      btn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Photo added';
+      btn.classList.replace('btn-outline-secondary', 'btn-outline-success');
+    };
+    reader.readAsDataURL(file);
+  });
+
+  remove.addEventListener('click', function () {
+    input.value = '';
+    img.src = '';
+    preview.classList.add('d-none');
+    btn.innerHTML = '<i class="bi bi-plus-lg me-1"></i>Photo';
+    btn.classList.replace('btn-outline-success', 'btn-outline-secondary');
+  });
+})();
+</script>
+{% endblock %}

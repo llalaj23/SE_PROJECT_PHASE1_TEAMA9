@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block title %}Inbox — Again &amp; Again{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+<div class="col-lg-7 col-xl-6">
+
+  <h5 class="fw-semibold mb-3">
+    <i class="bi bi-chat-dots me-2"></i>Inbox
+  </h5>
+
+  {% if conversations %}
+    <div class="card border-0 shadow-sm overflow-hidden">
+      {% for conv in conversations %}
+        <div class="{% if not forloop.last %}border-bottom{% endif %}">
+
+          {% if conv.item %}
+            <a href="{% url 'marketplace:conversation' conv.item.pk conv.other_user.pk %}"
+               class="d-flex align-items-center gap-3 px-3 py-3 text-decoration-none text-dark inbox-row">
+          {% else %}
+            <div class="d-flex align-items-center gap-3 px-3 py-3 inbox-row text-muted">
+          {% endif %}
+
+            <!-- Avatar with unread badge -->
+            <div class="position-relative flex-shrink-0">
+              {% if conv.other_user.profile_picture %}
+                <img src="{{ conv.other_user.profile_picture.url }}"
+                     class="rounded-circle object-fit-cover"
+                     style="width:52px; height:52px;"
+                     alt="{{ conv.other_user.full_name }}">
+              {% else %}
+                <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center"
+                     style="width:52px; height:52px;">
+                  <i class="bi bi-person-fill text-white" style="font-size:1.3rem;"></i>
+                </div>
+              {% endif %}
+              {% if conv.unread_count %}
+                <span class="position-absolute badge rounded-pill bg-danger"
+                      style="font-size:.6rem; min-width:18px; padding:3px 5px;
+                             bottom:-3px; right:-3px; border:2px solid #fff;">
+                  {{ conv.unread_count }}
+                </span>
+              {% endif %}
+            </div>
+
+            <!-- Text -->
+            <div class="flex-grow-1 overflow-hidden" style="min-width:0;">
+              <div class="d-flex justify-content-between align-items-baseline gap-2">
+                <span class="fw-semibold d-block text-truncate">
+                  {{ conv.other_user.full_name }}
+                </span>
+                <small class="text-muted text-nowrap flex-shrink-0" style="font-size:.72rem;">
+                  {{ conv.last_message.sentAt|naturaltime }}
+                </small>
+              </div>
+
+              {% if conv.item %}
+                <div class="text-muted text-truncate" style="font-size:.78rem; margin-top:1px;">
+                  <i class="bi bi-tag me-1"></i>{{ conv.item.itemName }}
+                </div>
+              {% endif %}
+
+              <p class="mb-0 text-truncate mt-1
+                         {% if conv.unread_count %}fw-semibold text-dark{% else %}text-muted{% endif %}"
+                 style="font-size:.85rem;">
+                {{ conv.last_message.messageContent|truncatechars:65 }}
+              </p>
+            </div>
+
+          {% if conv.item %}
+            </a>
+          {% else %}
+            </div>
+          {% endif %}
+
+        </div>
+      {% endfor %}
+    </div>
+
+  {% else %}
+    <div class="text-center text-muted py-5">
+      <i class="bi bi-chat-dots" style="font-size:3rem;"></i>
+      <p class="mt-3 fs-5">No conversations yet.</p>
+      <a href="{% url 'marketplace:browse' %}" class="btn btn-outline-dark mt-2">
+        <i class="bi bi-grid me-1"></i>Browse Listings
+      </a>
+    </div>
+  {% endif %}
+
+</div>
+</div>
+{% endblock %}

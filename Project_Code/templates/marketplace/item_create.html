@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Create Listing — Again &amp; Again{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8 col-xl-7">
+
+    <h2 class="mb-4 fw-bold">
+      <i class="bi bi-plus-circle me-2"></i>Create Listing
+    </h2>
+
+    <div class="card shadow-sm">
+      <div class="card-body p-4">
+
+        <form method="post" enctype="multipart/form-data" novalidate id="create-form">
+          {% csrf_token %}
+
+          {{ form|crispy }}
+
+          <!-- Multi-image upload -->
+          <div class="mb-3">
+            <label class="form-label fw-semibold">
+              <i class="bi bi-images me-1"></i>Photos <span class="text-danger">*</span>
+              <small class="text-muted fw-normal">(max 8, 5 MB each, JPG/PNG/WebP)</small>
+            </label>
+            <div class="text-muted small mb-2" id="image-count-msg"></div>
+          </div>
+
+          <!-- Live preview grid -->
+          <div id="image-preview" class="row row-cols-3 row-cols-sm-4 row-cols-md-5 g-2 mb-3"></div>
+
+          <!-- File input below previews -->
+          <div class="mb-3">
+            <input type="file"
+                   id="image-input"
+                   name="images"
+                   multiple
+                   accept="image/jpeg,image/png,image/webp"
+                   class="form-control">
+          </div>
+
+          <!-- Form actions -->
+          <div class="d-flex gap-2 justify-content-end mt-4">
+            <a href="{% url 'marketplace:home' %}" class="btn btn-outline-secondary">
+              <i class="bi bi-x-lg me-1"></i>Cancel
+            </a>
+            <button type="submit" class="btn btn-warning fw-semibold">
+              <i class="bi bi-check-lg me-1"></i>Create Listing
+            </button>
+          </div>
+        </form>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const input = document.getElementById('image-input');
+  const preview = document.getElementById('image-preview');
+  const countMsg = document.getElementById('image-count-msg');
+  let selectedFiles = [];
+
+  input.addEventListener('change', function () {
+    selectedFiles = [...selectedFiles, ...Array.from(this.files)];
+    if (selectedFiles.length > 8) selectedFiles = selectedFiles.slice(0, 8);
+    syncInput();
+    renderPreviews();
+  });
+
+  function removeFile(index) {
+    selectedFiles.splice(index, 1);
+    syncInput();
+    renderPreviews();
+  }
+
+  function syncInput() {
+    const dt = new DataTransfer();
+    selectedFiles.forEach(f => dt.items.add(f));
+    input.files = dt.files;
+  }
+
+  function renderPreviews() {
+    preview.innerHTML = '';
+    countMsg.textContent = selectedFiles.length
+      ? `${selectedFiles.length} photo${selectedFiles.length > 1 ? 's' : ''} selected`
+      : '';
+
+    selectedFiles.forEach((file, i) => {
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        const col = document.createElement('div');
+        col.className = 'col position-relative';
+        col.innerHTML = `
+          <img src="${e.target.result}"
+               class="img-fluid rounded border object-fit-cover"
+               style="height:80px;width:100%;" alt="">
+          ${i === 0 ? '<span class="badge bg-success mt-1 d-block text-center small">Primary</span>' : ''}
+          <button type="button"
+                  class="btn btn-danger btn-sm position-absolute top-0 end-0 m-1 p-0 lh-1"
+                  style="width:20px;height:20px;font-size:12px;"
+                  onclick="removeFile(${i})"
+                  title="Remove">
+            &times;
+          </button>`;
+        preview.appendChild(col);
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+</script>
+{% endblock %}

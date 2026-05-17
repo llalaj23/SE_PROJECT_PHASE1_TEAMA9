@@ -1,39 +1,559 @@
 {% extends "base.html" %}
+{% load static %}
 
-{% block title %}My Profile — Again & Again{% endblock %}
+{% block title %}{{ profile_user.full_name }} — Again &amp; Again{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-  <div class="col-md-6">
 
-    <div class="card shadow-sm border-0">
-      <div class="card-body p-4 text-center">
+<!-- ── Profile Header ──────────────────────────────────────────────────────── -->
+<div class="card shadow-sm border-0 mb-4">
+  <div class="rounded-top" style="height:140px; background: linear-gradient(135deg,#212529 0%,#495057 100%);"></div>
 
-        {% if user.profile_picture %}
-          <img src="{{ user.profile_picture.url }}" alt="Profile picture"
-               class="rounded-circle mb-3" width="100" height="100"
-               style="object-fit: cover;" />
+  <div class="card-body pt-0 px-4 pb-4">
+    <div class="d-flex flex-wrap align-items-end justify-content-between gap-3" style="margin-top:-50px;">
+
+      <!-- Avatar -->
+      <div>
+        {% if profile_user.profile_picture %}
+          <img src="{{ profile_user.profile_picture.url }}"
+               class="rounded-circle border border-4 border-white shadow"
+               width="100" height="100" style="object-fit:cover;" alt="Avatar">
         {% else %}
-          <i class="bi bi-person-circle text-secondary" style="font-size: 5rem;"></i>
+          <div class="rounded-circle border border-4 border-white shadow bg-secondary d-flex align-items-center justify-content-center"
+               style="width:100px;height:100px;">
+            <i class="bi bi-person-fill text-white" style="font-size:3rem;"></i>
+          </div>
         {% endif %}
-
-        <h3 class="fw-bold mt-2">{{ user.full_name }}</h3>
-        <p class="text-muted mb-1">{{ user.email }}</p>
-        {% if user.city %}
-          <p class="text-muted">
-            <i class="bi bi-geo-alt me-1"></i>{{ user.city }}
-          </p>
-        {% endif %}
-
-        <hr />
-
-        <p class="text-muted fst-italic">
-          Profile editing and listings tabs will be added in Sprint 2 &amp; 3.
-        </p>
-
       </div>
+
+      <!-- Header buttons (own profile only) -->
+      {% if is_own_profile %}
+        <div class="d-flex gap-2 flex-wrap">
+          <a href="{% url 'users:profile_edit' %}" class="btn btn-outline-light btn-sm">
+            <i class="bi bi-pencil me-1"></i>Edit Profile
+          </a>
+        </div>
+      {% endif %}
     </div>
 
+    <!-- Name + other-user actions on the same line -->
+    <div class="d-flex align-items-start justify-content-between flex-wrap gap-2 mt-3">
+      <h3 class="fw-bold mb-0">{{ profile_user.full_name }}</h3>
+      {% if not is_own_profile and user.is_authenticated %}
+        <div class="d-flex gap-2">
+          <a href="{% url 'marketplace:report_create' 'user' profile_user.pk %}"
+             class="btn btn-outline-danger btn-sm">
+            <i class="bi bi-flag me-1"></i>Report
+          </a>
+          <form method="post" action="{% url 'marketplace:block_toggle' profile_user.pk %}">
+            {% csrf_token %}
+            {% if is_blocked %}
+              <button type="submit" class="btn btn-secondary btn-sm">
+                <i class="bi bi-person-check me-1"></i>Unblock
+              </button>
+            {% else %}
+              <button type="submit" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-person-slash me-1"></i>Block
+              </button>
+            {% endif %}
+          </form>
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="d-flex flex-wrap gap-3 text-muted small mt-2">
+      {% if is_own_profile %}
+        <span><i class="bi bi-envelope me-1"></i>{{ profile_user.email }}</span>
+      {% endif %}
+      {% if profile_user.city %}
+        <span><i class="bi bi-geo-alt me-1"></i>{{ profile_user.city }}</span>
+      {% endif %}
+      {% if profile_user.phoneNumber and is_own_profile %}
+        <span><i class="bi bi-telephone me-1"></i>{{ profile_user.phoneNumber }}</span>
+      {% endif %}
+      <span><i class="bi bi-calendar3 me-1"></i>Member since {{ profile_user.createdAt|date:"M Y" }}</span>
+    </div>
+
+    {% if profile_user.bio %}
+      <p class="mt-3 mb-0">{{ profile_user.bio }}</p>
+    {% endif %}
+
+    <!-- Rating -->
+    <div class="mt-3 d-flex align-items-center gap-2">
+      <div class="text-warning">
+        {% for i in "12345" %}
+          {% if forloop.counter <= profile_user.rating %}
+            <i class="bi bi-star-fill"></i>
+          {% else %}
+            <i class="bi bi-star"></i>
+          {% endif %}
+        {% endfor %}
+      </div>
+      <span class="text-muted small">
+        {{ profile_user.rating|floatformat:1 }} &middot; {{ reviews|length }} review{{ reviews|length|pluralize }}
+      </span>
+    </div>
   </div>
 </div>
+
+<!-- ── Tabs ────────────────────────────────────────────────────────────────── -->
+<ul class="nav nav-tabs mb-4" id="profileTabs" role="tablist">
+  <li class="nav-item" role="presentation">
+    <button class="nav-link active" id="listings-tab"
+            data-bs-toggle="tab" data-bs-target="#listings"
+            type="button" role="tab">
+      <i class="bi bi-grid me-1"></i>
+      {% if is_own_profile %}My Listings{% else %}Listings{% endif %}
+      <span class="badge bg-secondary ms-1 fw-normal" style="font-size:.7rem;">{{ listings|length }}</span>
+    </button>
+  </li>
+
+  {% if is_own_profile %}
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="orders-tab"
+            data-bs-toggle="tab" data-bs-target="#orders"
+            type="button" role="tab">
+      <i class="bi bi-bag-check me-1"></i>My Orders
+      <span class="badge bg-secondary ms-1 fw-normal" style="font-size:.7rem;">{{ purchases|length }}</span>
+    </button>
+  </li>
+  {% endif %}
+
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="reviews-tab"
+            data-bs-toggle="tab" data-bs-target="#reviews"
+            type="button" role="tab">
+      <i class="bi bi-star me-1"></i>Reviews
+      <span class="badge bg-secondary ms-1 fw-normal" style="font-size:.7rem;">{{ reviews|length }}</span>
+    </button>
+  </li>
+
+  {% if is_own_profile %}
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="given-tab"
+            data-bs-toggle="tab" data-bs-target="#given"
+            type="button" role="tab">
+      <i class="bi bi-pencil-square me-1"></i>Recent Reviews
+      <span class="badge bg-secondary ms-1 fw-normal" style="font-size:.7rem;">{{ reviews_given|length }}</span>
+    </button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="saved-tab"
+            data-bs-toggle="tab" data-bs-target="#saved"
+            type="button" role="tab">
+      <i class="bi bi-heart me-1"></i>Saved
+      <span class="badge bg-secondary ms-1 fw-normal" style="font-size:.7rem;">{{ wishlist_items|length }}</span>
+    </button>
+  </li>
+  {% endif %}
+</ul>
+
+<div class="tab-content" id="profileTabsContent">
+
+  <!-- ── Listings tab ──────────────────────────────────────────────────────── -->
+  <div class="tab-pane fade show active" id="listings" role="tabpanel">
+    {% if listings %}
+      <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 g-3" id="listings-grid">
+        {% for item in listings %}
+          <div class="col{% if forloop.counter > 4 %} d-none extra-listing{% endif %}">
+            <div class="card h-100 shadow-sm">
+              {% with item.images.all as imgs %}
+                {% for img in imgs %}{% if img.is_primary %}
+                  <img src="{{ img.image.url }}"
+                       class="card-img-top object-fit-cover" style="height:130px;"
+                       alt="{{ item.itemName }}">
+                {% endif %}{% endfor %}
+                {% if not imgs %}
+                  <div class="card-img-top d-flex align-items-center justify-content-center bg-light"
+                       style="height:130px;">
+                    <i class="bi bi-image text-muted" style="font-size:2rem;"></i>
+                  </div>
+                {% endif %}
+              {% endwith %}
+              <div class="card-body py-2 px-3">
+                <p class="card-title small fw-semibold text-truncate mb-0">{{ item.itemName }}</p>
+                <p class="text-success small fw-bold mb-1">{{ item.itemPrice|floatformat:0 }} Lek</p>
+                {% if item.status == 'sold' %}
+                  <span class="badge bg-danger" style="font-size:.65rem;">Sold</span>
+                {% elif item.status == 'reserved' %}
+                  <span class="badge bg-warning text-dark" style="font-size:.65rem;">Reserved</span>
+                {% endif %}
+
+                {% if is_own_profile and item.status == 'available' %}
+                  <div class="d-flex gap-1 mt-2 position-relative" style="z-index:1;">
+                    <a href="{% url 'marketplace:item_edit' item.pk %}"
+                       class="btn btn-outline-warning btn-sm flex-grow-1"
+                       style="font-size:.7rem; padding:2px 6px;">
+                      <i class="bi bi-pencil"></i> Edit
+                    </a>
+                    <a href="{% url 'marketplace:item_delete' item.pk %}"
+                       class="btn btn-outline-danger btn-sm"
+                       style="font-size:.7rem; padding:2px 6px;">
+                      <i class="bi bi-trash"></i>
+                    </a>
+                  </div>
+                {% elif is_own_profile and item.status == 'reserved' %}
+                  <div class="d-flex gap-1 mt-2 position-relative" style="z-index:1;">
+                    <a href="{% url 'marketplace:item_detail' item.pk %}"
+                       class="btn btn-outline-secondary btn-sm"
+                       style="font-size:.7rem; padding:2px 6px;">
+                      <i class="bi bi-eye"></i> View
+                    </a>
+                    <form method="post" action="{% url 'marketplace:item_mark_available' item.pk %}" class="flex-grow-1">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-outline-success btn-sm w-100"
+                              style="font-size:.7rem; padding:2px 6px;">
+                        <i class="bi bi-arrow-repeat"></i> Reopen
+                      </button>
+                    </form>
+                  </div>
+                {% elif is_own_profile and item.status == 'sold' %}
+                  <div class="d-flex gap-1 mt-2 position-relative" style="z-index:1;">
+                    <form method="post" action="{% url 'marketplace:item_mark_available' item.pk %}" class="flex-grow-1">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-outline-success btn-sm w-100"
+                              style="font-size:.7rem; padding:2px 6px;">
+                        <i class="bi bi-arrow-repeat"></i> Reopen
+                      </button>
+                    </form>
+                  </div>
+                {% endif %}
+
+                <a href="{% url 'marketplace:item_detail' item.pk %}" class="stretched-link"></a>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+
+      {% if listings|length > 4 %}
+        <div class="text-center mt-3">
+          <button class="btn btn-outline-dark btn-sm px-4 profile-show-more">
+            <i class="bi bi-chevron-down me-1"></i>Show More
+          </button>
+        </div>
+      {% endif %}
+
+    {% else %}
+      <div class="text-center text-muted py-5 border rounded">
+        <i class="bi bi-box-seam" style="font-size:2.5rem;"></i>
+        <p class="mt-2 mb-0">No listings yet.</p>
+        {% if is_own_profile %}
+          <a href="{% url 'marketplace:item_create' %}" class="btn btn-warning btn-sm mt-3">
+            <i class="bi bi-plus-circle me-1"></i>Post a Listing
+          </a>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- ── Orders tab (own profile only) ────────────────────────────────────── -->
+  {% if is_own_profile %}
+  <div class="tab-pane fade" id="orders" role="tabpanel">
+    {% if purchases %}
+      <div class="card border-0 shadow-sm overflow-hidden">
+        {% for offer in purchases %}
+          <div class="d-flex align-items-center gap-3 px-3 py-3
+                      {% if not forloop.last %}border-bottom{% endif %}">
+
+            {% with offer.item.images.all as imgs %}
+              {% for img in imgs %}{% if img.is_primary %}
+                <img src="{{ img.image.url }}"
+                     class="rounded object-fit-cover flex-shrink-0"
+                     style="width:56px;height:56px;" alt="">
+              {% endif %}{% empty %}
+                <div class="rounded bg-light d-flex align-items-center justify-content-center flex-shrink-0"
+                     style="width:56px;height:56px;">
+                  <i class="bi bi-image text-muted"></i>
+                </div>
+              {% endfor %}
+            {% endwith %}
+
+            <div class="flex-grow-1 overflow-hidden" style="min-width:0;">
+              <a href="{% url 'marketplace:item_detail' offer.item.pk %}"
+                 class="fw-semibold text-dark text-decoration-none text-truncate d-block">
+                {{ offer.item.itemName }}
+              </a>
+              <small class="text-muted">
+                From
+                <a href="{% url 'users:public_profile' offer.seller.pk %}"
+                   class="text-dark text-decoration-none fw-semibold">
+                  {{ offer.seller.full_name }}
+                </a>
+              </small>
+              <div class="text-muted" style="font-size:.78rem;">{{ offer.created_at|date:"d M Y" }}</div>
+            </div>
+
+            <div class="text-end flex-shrink-0">
+              <div class="fw-bold text-success">{{ offer.offered_price|floatformat:0 }} Lek</div>
+              {% if offer.item.status == 'sold' %}
+                <span class="badge bg-success" style="font-size:.65rem;">Completed</span>
+              {% elif offer.item.status == 'reserved' %}
+                <span class="badge bg-warning text-dark" style="font-size:.65rem;">Reserved</span>
+              {% else %}
+                <span class="badge bg-secondary" style="font-size:.65rem;">{{ offer.item.status }}</span>
+              {% endif %}
+
+              {% if offer.item.pk in reviewed_item_pks %}
+                <div class="mt-1">
+                  <span class="badge bg-warning text-dark" style="font-size:.65rem;">
+                    <i class="bi bi-star-fill me-1"></i>Reviewed
+                  </span>
+                </div>
+              {% else %}
+                <div class="mt-1">
+                  <button class="btn btn-warning btn-sm"
+                          style="font-size:.7rem; padding:2px 8px;"
+                          type="button"
+                          data-bs-toggle="collapse"
+                          data-bs-target="#review-order-{{ offer.pk }}">
+                    <i class="bi bi-star me-1"></i>Leave a Review
+                  </button>
+                </div>
+              {% endif %}
+            </div>
+
+          </div>
+
+          <!-- Inline review form -->
+          {% if offer.item.pk not in reviewed_item_pks %}
+          <div class="collapse px-3 pb-3 border-top" id="review-order-{{ offer.pk }}">
+            <p class="small text-muted mt-2 mb-2">How was your experience with
+              <strong>{{ offer.seller.full_name }}</strong>?
+            </p>
+            <form method="post" action="{% url 'marketplace:review_create' offer.item.pk %}">
+              {% csrf_token %}
+              <div class="d-flex gap-2 fs-5 mb-2" id="star-row-{{ offer.pk }}">
+                {% for val in "12345" %}
+                  <label class="text-warning" style="cursor:pointer;">
+                    <input type="radio" name="rating" value="{{ val }}"
+                           class="d-none star-input-{{ offer.pk }}">
+                    <i class="bi bi-star star-icon-{{ offer.pk }}"></i>
+                  </label>
+                {% endfor %}
+              </div>
+              <textarea name="comment" rows="2" class="form-control form-control-sm mb-2"
+                        placeholder="Share your experience (optional)…"></textarea>
+              <button type="submit" class="btn btn-warning btn-sm review-submit-{{ offer.pk }}" disabled>
+                <i class="bi bi-star-fill me-1"></i>Submit Review
+              </button>
+            </form>
+          </div>
+          {% endif %}
+
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="text-center text-muted py-5 border rounded">
+        <i class="bi bi-bag" style="font-size:2.5rem;"></i>
+        <p class="mt-2 mb-0">No purchases yet.</p>
+        <a href="{% url 'marketplace:browse' %}" class="btn btn-outline-dark btn-sm mt-3">
+          <i class="bi bi-grid me-1"></i>Browse Listings
+        </a>
+      </div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <!-- ── Reviews tab ───────────────────────────────────────────────────────── -->
+  <div class="tab-pane fade" id="reviews" role="tabpanel">
+    {% if reviews %}
+      <div class="d-flex flex-column gap-3">
+        {% for review in reviews %}
+          <div class="card border-0 shadow-sm">
+            <div class="card-body py-3 px-3">
+              <div class="d-flex justify-content-between align-items-start mb-1">
+                <a href="{% url 'users:public_profile' review.reviewerID.pk %}"
+                   class="text-dark text-decoration-none fw-semibold small">
+                  {{ review.reviewerID.full_name }}
+                </a>
+                <div class="text-warning small">
+                  {% for i in "12345" %}
+                    {% if forloop.counter <= review.rating %}
+                      <i class="bi bi-star-fill"></i>
+                    {% else %}
+                      <i class="bi bi-star"></i>
+                    {% endif %}
+                  {% endfor %}
+                </div>
+              </div>
+              {% if review.itemID %}
+                <div class="text-muted" style="font-size:.78rem;">
+                  <i class="bi bi-tag me-1"></i>
+                  <a href="{% url 'marketplace:item_detail' review.itemID.pk %}"
+                     class="text-muted text-decoration-none">
+                    {{ review.itemID.itemName }}
+                  </a>
+                </div>
+              {% endif %}
+              {% if review.comment %}
+                <p class="mb-0 small text-muted mt-1">{{ review.comment }}</p>
+              {% endif %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="text-center text-muted py-5 border rounded">
+        <i class="bi bi-chat-square" style="font-size:2.5rem;"></i>
+        <p class="mt-2 mb-0">No reviews yet.</p>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- ── Saved / Wishlist tab (own profile only) ─────────────────────────── -->
+  {% if is_own_profile %}
+  <div class="tab-pane fade" id="saved" role="tabpanel">
+    {% if wishlist_items %}
+      <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 g-3">
+        {% for entry in wishlist_items %}
+          {% with item=entry.itemID %}
+          <div class="col">
+            <div class="card h-100 shadow-sm">
+              {% with item.images.all as imgs %}
+                {% for img in imgs %}{% if img.is_primary %}
+                  <img src="{{ img.image.url }}"
+                       class="card-img-top object-fit-cover" style="height:130px;"
+                       alt="{{ item.itemName }}">
+                {% endif %}{% endfor %}
+                {% if not imgs %}
+                  <div class="card-img-top d-flex align-items-center justify-content-center bg-light"
+                       style="height:130px;">
+                    <i class="bi bi-image text-muted" style="font-size:2rem;"></i>
+                  </div>
+                {% endif %}
+              {% endwith %}
+              <div class="card-body py-2 px-3">
+                <p class="card-title small fw-semibold text-truncate mb-0">{{ item.itemName }}</p>
+                <p class="text-success small fw-bold mb-1">{{ item.itemPrice|floatformat:0 }} Lek</p>
+                {% if item.status == 'sold' %}
+                  <span class="badge bg-danger" style="font-size:.65rem;">Sold</span>
+                {% elif item.status == 'reserved' %}
+                  <span class="badge bg-warning text-dark" style="font-size:.65rem;">Reserved</span>
+                {% endif %}
+                <div class="d-flex gap-1 mt-2 position-relative" style="z-index:1;">
+                  <a href="{% url 'marketplace:item_detail' item.pk %}"
+                     class="btn btn-outline-dark btn-sm flex-grow-1"
+                     style="font-size:.7rem; padding:2px 6px;">
+                    <i class="bi bi-eye"></i> View
+                  </a>
+                  <form method="post" action="{% url 'marketplace:wishlist_toggle' item.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-danger btn-sm"
+                            style="font-size:.7rem; padding:2px 6px;" title="Remove from saved">
+                      <i class="bi bi-heart-fill"></i>
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+          {% endwith %}
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="text-center text-muted py-5 border rounded">
+        <i class="bi bi-heart" style="font-size:2.5rem;"></i>
+        <p class="mt-2 mb-0">No saved items yet.</p>
+        <a href="{% url 'marketplace:browse' %}" class="btn btn-outline-dark btn-sm mt-3">
+          <i class="bi bi-grid me-1"></i>Browse Listings
+        </a>
+      </div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <!-- ── Recent Reviews tab (own profile only) ───────────────────────────── -->
+  {% if is_own_profile %}
+  <div class="tab-pane fade" id="given" role="tabpanel">
+    {% if reviews_given %}
+      <div class="d-flex flex-column gap-3">
+        {% for review in reviews_given %}
+          <div class="card border-0 shadow-sm">
+            <div class="card-body py-3 px-3">
+              <div class="d-flex justify-content-between align-items-start mb-1">
+                <span class="text-muted small">
+                  You reviewed
+                  <a href="{% url 'users:public_profile' review.revieweeID.pk %}"
+                     class="text-dark text-decoration-none fw-semibold">
+                    {{ review.revieweeID.full_name }}
+                  </a>
+                </span>
+                <div class="text-warning small">
+                  {% for i in "12345" %}
+                    {% if forloop.counter <= review.rating %}
+                      <i class="bi bi-star-fill"></i>
+                    {% else %}
+                      <i class="bi bi-star"></i>
+                    {% endif %}
+                  {% endfor %}
+                </div>
+              </div>
+              {% if review.itemID %}
+                <div class="text-muted" style="font-size:.78rem;">
+                  <i class="bi bi-tag me-1"></i>
+                  <a href="{% url 'marketplace:item_detail' review.itemID.pk %}"
+                     class="text-muted text-decoration-none">
+                    {{ review.itemID.itemName }}
+                  </a>
+                </div>
+              {% endif %}
+              {% if review.comment %}
+                <p class="mb-0 small text-muted mt-1">{{ review.comment }}</p>
+              {% endif %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="text-center text-muted py-5 border rounded">
+        <i class="bi bi-pencil-square" style="font-size:2.5rem;"></i>
+        <p class="mt-2 mb-0">You haven't reviewed anyone yet.</p>
+      </div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.querySelectorAll('.profile-show-more').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('.extra-listing').forEach(el => el.classList.remove('d-none'));
+      this.remove();
+    });
+  });
+
+  // Activate a specific tab if ?tab=<id> is in the URL
+  (function () {
+    const tabParam = new URLSearchParams(window.location.search).get('tab');
+    if (tabParam) {
+      const btn = document.querySelector('[data-bs-target="#' + tabParam + '"]');
+      if (btn) {
+        const tab = new bootstrap.Tab(btn);
+        tab.show();
+      }
+    }
+  })();
+
+  // Wire up star ratings for each inline review form
+  document.querySelectorAll('[id^="review-order-"]').forEach(function(panel) {
+    var offerId = panel.id.replace('review-order-', '');
+    var inputs  = panel.querySelectorAll('.star-input-' + offerId);
+    var icons   = panel.querySelectorAll('.star-icon-' + offerId);
+    var submit  = panel.querySelector('.review-submit-' + offerId);
+
+    inputs.forEach(function(input, idx) {
+      input.addEventListener('change', function() {
+        icons.forEach(function(icon, i) {
+          icon.classList.toggle('bi-star-fill', i <= idx);
+          icon.classList.toggle('bi-star',      i >  idx);
+        });
+        if (submit) submit.disabled = false;
+      });
+    });
+  });
+</script>
 {% endblock %}

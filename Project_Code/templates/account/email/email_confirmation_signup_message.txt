@@ -1,0 +1,10 @@
+{% load account %}{% user_display user as user_display %}Welcome to Again & Again, {{ user_display }}!
+
+Thanks for signing up. Please confirm your email address by visiting the link below:
+
+{{ activate_url }}
+
+If you didn't create an account, you can safely ignore this email.
+
+— Again & Again
+{{ current_site.domain }}

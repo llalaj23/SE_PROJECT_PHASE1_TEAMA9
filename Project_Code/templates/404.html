@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block title %}Page Not Found — Again &amp; Again{% endblock %}
+
+{% block content %}
+<div class="text-center py-5">
+  <div class="mb-4" style="font-size: 6rem; line-height: 1;">&#128533;</div>
+  <h1 class="display-4 fw-bold mb-2">404</h1>
+  <h2 class="h4 text-muted mb-4">Page Not Found</h2>
+  <p class="text-muted mb-4">
+    The page you're looking for doesn't exist, was removed, or the link is broken.
+  </p>
+  <div class="d-flex gap-3 justify-content-center flex-wrap">
+    <a href="{% url 'marketplace:home' %}" class="btn btn-dark btn-lg">
+      <i class="bi bi-house me-2"></i>Go Home
+    </a>
+    <a href="{% url 'marketplace:browse' %}" class="btn btn-outline-dark btn-lg">
+      <i class="bi bi-grid me-2"></i>Browse Listings
+    </a>
+  </div>
+</div>
+{% endblock %}
