@@ -1,28 +1,53 @@
-// ─── Notification Badge Poller ────────────────────────────────────────────────
-// Runs on every page. Asks the server every 10 seconds how many unread
-// notifications the logged-in user has, then updates the badge in the navbar.
+// ─── Badge Pollers ────────────────────────────────────────────────────────────
+// Runs on every authenticated page (loaded from base.html).
+// Updates the notification bell badge and the inbox badge every 10 seconds.
 // ─────────────────────────────────────────────────────────────────────────────
 
 (function () {
-  const badge = document.getElementById('notification-badge');
-  if (!badge) return; // Not logged in or badge not in DOM — do nothing.
+  const notifBadge = document.getElementById('notification-badge');
+  const inboxBadge = document.getElementById('inbox-badge');
 
-  async function fetchUnreadCount() {
+  // ── Notification bell badge ────────────────────────────────────────────────
+  async function fetchNotifCount() {
     try {
-      const response = await fetch('/notifications/unread-count/', {
+      const r = await fetch('/notifications/unread-count/', {
         headers: { 'X-Requested-With': 'XMLHttpRequest' },
       });
-      if (!response.ok) return;
-      const data = await response.json();
+      if (!r.ok) return;
+      const data = await r.json();
       const count = data.unread_count || 0;
-      badge.textContent = count > 0 ? count : '';
-      badge.style.display = count > 0 ? 'inline' : 'none';
+      if (notifBadge) {
+        notifBadge.textContent = count > 0 ? count : '';
+        notifBadge.style.display = count > 0 ? 'inline' : 'none';
+      }
     } catch (_) {
-      // Silently ignore network errors — badge just won't update.
+      // Silently ignore network errors.
+    }
+  }
+
+  // ── Inbox (unread messages) badge ─────────────────────────────────────────
+  async function fetchInboxCount() {
+    try {
+      const r = await fetch('/messages/unread-count/', {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+      });
+      if (!r.ok) return;
+      const data = await r.json();
+      const count = data.count || 0;
+      if (inboxBadge) {
+        inboxBadge.textContent = count > 0 ? count : '';
+        inboxBadge.style.display = count > 0 ? 'inline' : 'none';
+      }
+    } catch (_) {
+      // Silently ignore network errors.
     }
   }
 
   // Poll immediately on page load, then every 10 seconds.
-  fetchUnreadCount();
-  setInterval(fetchUnreadCount, 10000);
+  fetchNotifCount();
+  fetchInboxCount();
+  setInterval(function () {
+    fetchNotifCount();
+    fetchInboxCount();
+  }, 10000);
 })();

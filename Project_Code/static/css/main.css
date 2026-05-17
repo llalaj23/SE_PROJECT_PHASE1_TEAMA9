@@ -29,3 +29,11 @@ main {
 footer {
   margin-top: auto;
 }
+
+/* ─── Inbox ───────────────────────────────────────────────────────────────── */
+.inbox-row {
+  transition: background-color .15s;
+}
+.inbox-row:hover {
+  background-color: #f8f9fa;
+}

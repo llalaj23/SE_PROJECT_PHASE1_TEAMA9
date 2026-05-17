@@ -1,0 +1,23 @@
+<svg viewBox="215 95 250 145" role="img" xmlns="http://www.w3.org/2000/svg">
+
+  <!-- Loop A (left, purple) -->
+  <path d="M 240 170
+      C 240 130, 280 105, 320 130
+      C 355 152, 355 188, 320 210
+      C 285 230, 245 218, 240 190"
+    fill="none" stroke="#AFA9EC" stroke-width="7" stroke-linecap="round"/>
+  <polygon points="228,182 248,172 248,196" fill="#AFA9EC"/>
+
+  <!-- Loop B (right, teal) -->
+  <path d="M 440 170
+      C 440 130, 400 105, 360 130
+      C 325 152, 325 188, 360 210
+      C 395 230, 435 218, 440 190"
+    fill="none" stroke="#5DCAA5" stroke-width="7" stroke-linecap="round"/>
+  <polygon points="452,182 432,172 432,196" fill="#5DCAA5"/>
+
+  <!-- Center dots -->
+  <circle cx="340" cy="155" r="5" fill="#AFA9EC" opacity="0.6"/>
+  <circle cx="340" cy="205" r="5" fill="#5DCAA5" opacity="0.6"/>
+
+</svg>
