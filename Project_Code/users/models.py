@@ -43,6 +43,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     latitude = models.FloatField(null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)
     phoneNumber = models.CharField(max_length=20, blank=True)
+    bio = models.TextField(max_length=300, blank=True)
     profile_picture = models.ImageField(upload_to='profiles/', blank=True, null=True)
     rating = models.FloatField(default=0.0)
     createdAt = models.DateTimeField(auto_now_add=True)
